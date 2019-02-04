@@ -1,0 +1,15 @@
+{
+    "aListIP": [
+        "127.0.0.1"
+    ],
+    "bActive": false,
+    "bListIPisBlackNotWhite": false,
+    "sClass": "ModuleAppControl",
+    "sListenIPorHostname": "localhost",
+    "sPassword": "-",
+    "sUID": "00AC",
+    "sUser": "admin",
+    "uiListenPort": 7770,
+    "uiListenPort1": 7771,
+    "uiMaxConnections": 25
+}

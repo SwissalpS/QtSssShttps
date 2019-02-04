@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>WebSocket Echo Client</title>
+		<meta charset="utf-8">
+	</head>
+	<body>
+		<h1>WebSocket Echo Client</h1>
+		<p>
+			<button onClick="SssS.oSocket.initWebSocket();">Connect</button>
+			<button onClick="SssS.oSocket.stopWebSocket();">Disconnect</button>
+			<button onClick="SssS.oSocket.checkSocket();">State</button>
+		</p>
+		<p>
+			<textarea id="debugTextArea" style="width:400px;height:200px;"></textarea>
+		</p>
+		<p>
+			<input type="text" id="inputText" onkeydown="if(event.keyCode==13)SssS.oSocket.sendMessage();"/>
+			<button onClick="SssS.oSocket.sendMessage();">Send</button>
+		</p>
+
+		<script type="text/javascript">
+			var SssS = {};
+			SssS.oSocket = {};
+			SssS.oSocket.config = {
+				uri: 'wss://localhost:7771',
+				idDebugArea: 'debugTextArea',
+				idInput: 'inputText',
+			} // SssS.oSocket.config
+
+			SssS.oSocket.eDebug = document.getElementById(SssS.oSocket.config.idDebugArea);
+			SssS.oSocket.oWebSocket = null;
+
+			SssS.oSocket.debug = function(sMessage) {
+				console.log(sMessage);
+				if (!this.eDebug) return;
+				this.eDebug.value += sMessage + "\n";
+				this.eDebug.scrollTop = this.eDebug.scrollHeight;
+			} // debug
+
+			SssS.oSocket.sendMessage = function() {
+				if (!this.oWebSocket) return;
+				var eInput = document.getElementById(this.config.idInput);
+				var sMessage = eInput.value;
+				eInput.value = '';
+				this.oWebSocket.send(sMessage);
+				this.debug('string sent :"' + sMessage + '"');
+			} // sendMessage
+
+			SssS.oSocket.initWebSocket = function() {
+			var self = this;
+				try {
+					if (typeof MozWebSocket == 'function') WebSocket = MozWebSocket;
+					if (this.oWebSocket && (1 == this.oWebSocket.readyState))
+						this.oWebSocket.close();
+
+					this.oWebSocket = new WebSocket(this.config.uri);
+					this.oWebSocket.onopen = function (evt) {
+						self.debug('CONNECTED');
+					};
+					this.oWebSocket.onclose = function (evt) {
+						self.debug('DISCONNECTED');
+					};
+					this.oWebSocket.onmessage = function (oEvent) {
+						self.debug('Message received: ' + oEvent.data);
+					};
+					this.oWebSocket.onerror = function (oEvent) {
+						self.debug('ERROR: ' + oEvent.data);
+					};
+				} catch (sException) {
+					this.debug('ERROR: ' + sException);
+				} // try catch
+			} // initWebSocket
+
+			SssS.oSocket.stopWebSocket = function() {
+				if (!this.oWebSocket) return;
+				this.oWebSocket.close();
+			} // stopWebSocket
+
+			SssS.oSocket.checkSocket = function() {
+				if (!this.oWebSocket) {
+					this.debug('WebSocket is null');
+					return;
+				} // if no socket
+				var stateStr;
+				switch (this.oWebSocket.readyState) {
+					case 0: stateStr = 'CONNECTING'; break;
+					case 1: stateStr = 'OPEN'; break;
+					case 2: stateStr = 'CLOSING'; break;
+					case 3: stateStr = 'CLOSED'; break;
+					default: stateStr = 'UNKNOW'; break;
+				} // switch state
+				this.debug('WebSocket state = ' + this.oWebSocket.readyState
+							+ ' ( ' + stateStr + ' )');
+
+			} // checkSocket
+		</script>
+	</body>
+</html>
+

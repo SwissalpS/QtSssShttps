@@ -1,0 +1,7 @@
+<RCC>
+	<qresource prefix="/">
+		<file>bin/makeKeys.sh</file>
+		<file>moduleTemplates/00_AppControl.json</file>
+		<file>www/moduleAppControl.html</file>
+	</qresource>
+</RCC>

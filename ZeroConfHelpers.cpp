@@ -1,5 +1,7 @@
 #include "ZeroConfHelpers.h"
 
+#include "ModuleConf.h"
+
 
 
 namespace SwissalpS { namespace QtSssSapp {
@@ -23,14 +25,14 @@ ZeroConfServiceDescriptor::ZeroConfServiceDescriptor(const QZeroConfService &oSe
 	this->ojoService.insert("host", oService.host());
 	this->ojoService.insert("ip", oService.ip().toString());
 	this->ojoService.insert("ipv6", oService.ipv6().toString());
-	this->ojoService.insert("interfaceIndex", oService.interfaceIndex());
+	this->ojoService.insert("interfaceIndex", int(oService.interfaceIndex()));
 
 	QJsonObject ojoTextRecord;
 	QJsonArray ojaTextRecords;
 	QMap<QByteArray, QByteArray> hTxt = oService.txt();
 	QList<QByteArray> aKeys = hTxt.keys();
 	QList<QByteArray> aValues = hTxt.values();
-	for (int i = 0; i < total; ++i) {
+	for (int i = 0; i < aKeys.length(); ++i) {
 
 		ojoTextRecord = QJsonObject();
 		ojoTextRecord.insert(ModuleConf::sTagZeroConfTXTrecordLabel,
@@ -51,7 +53,7 @@ ZeroConfServiceDescriptor::ZeroConfServiceDescriptor(const QString &sModuleUID,
 													 QJsonObject &ojoServiceDescriptor,
 													 QObject *pParent) :
 	QObject(pParent),
-	bIsBrowserInfo(fals),
+	bIsBrowserInfo(false),
 	bOK(false),
 	pService(nullptr),
 	sModuleUID(sModuleUID) {
@@ -81,7 +83,7 @@ ZeroConfServiceDescriptor::ZeroConfServiceDescriptor(const QString &sModuleUID,
 	this->ojoService.insert(ModuleConf::sTagZeroConfServiceName,
 							ojoServiceDescriptor.value(
 								ModuleConf::sTagZeroConfServiceName).toString(
-								SssS_APP_NAME + ":" + sModuleUID));
+								QString(SssS_APP_NAME) + ":" + sModuleUID));
 
 	QJsonArray ojaTXTrecords = ojoServiceDescriptor.value(
 								   ModuleConf::sTagZeroConfTXTrecord).toArray();

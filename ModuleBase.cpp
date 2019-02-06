@@ -35,7 +35,7 @@ void ModuleBase::die() {
 
 	this->stop();
 
-	Q_EMIT this->unregisterZeroConfServiceDescriptors(this->moduleUID());
+	this->unregisterZeroConfServices();
 
 } // die
 
@@ -265,6 +265,21 @@ void ModuleBase::onBusMessage(const QJsonObject &ojoMessage) {
 } // onBusMessage
 
 
+void ModuleBase::registerZeroConfServices() {
+
+	QJsonArray ojaZC = this->pMC->zeroConf();
+	QJsonObject ojoZC;
+	for (int j = 0; j < ojaZC.count(); ++j) {
+
+		ojoZC = ojaZC.at(j).toObject();
+		Q_EMIT this->registerZeroConfServiceDescriptor(
+					new ZeroConfServiceDescriptor(this->moduleUID(), ojoZC));
+
+	} // loop each service
+
+} // registerZeroConfServices
+
+
 // to be overridden by subclass
 void ModuleBase::start() {
 
@@ -272,15 +287,7 @@ void ModuleBase::start() {
 
 	this->onDebugMessage("start " + this->moduleUID() + ":" + this->pMC->moduleClass());
 
-	QJsonArray ojaZC = this->pMC->zeroConf();
-	QJsonObject ojoZC;
-	for (int j = 0; j < ojaZC.count(); ++j) {
-
-		ojoZC = ojaZC.at(j);
-		Q_EMIT this->registerZeroConfServiceDescriptor(
-					new ZeroConfServiceDescriptor(this->moduleUID(), ojoZC));
-
-	} // loop each service
+	this->registerZeroConfServices();
 
 	Q_EMIT this->startZeroConfServices(this->moduleUID());
 
@@ -325,6 +332,13 @@ QHostAddress ModuleBase::stringToHostAddress(const QString &sHostOrIP) {
 	return oHost;
 
 } // stringToHostAddress
+
+
+void ModuleBase::unregisterZeroConfServices() {
+
+	Q_EMIT this->unregisterZeroConfServiceDescriptors(this->moduleUID());
+
+} // unregisterZeroConfServices
 
 
 

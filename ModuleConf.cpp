@@ -12,6 +12,35 @@ const QString ModuleConf::sModuleAppControl = QStringLiteral("ModuleAppControl")
 const QString ModuleConf::sModuleBase = QStringLiteral("ModuleBase");
 const QString ModuleConf::sModuleZeroConfig = QStringLiteral("ModuleZeroConfig");
 
+const QString ModuleConf::sTagActive = QStringLiteral("bActive");
+const QString ModuleConf::sTagClass = QStringLiteral("sClass");
+const QString ModuleConf::sTagListenIP = QStringLiteral("sListenIPorHostname");
+const QString ModuleConf::sTagListenPort = QStringLiteral("uiListenPort");
+const QString ModuleConf::sTagListenPort1 = QStringLiteral("uiListenPort1");
+const QString ModuleConf::sTagListenPort2 = QStringLiteral("uiListenPort2");
+const QString ModuleConf::sTagListIP = QStringLiteral("aListIP");
+const QString ModuleConf::sTagListIPisBlackNotWhite = QStringLiteral("bListIPisBlackNotWhite");
+const QString ModuleConf::sTagMaxConnections = QStringLiteral("uiMaxConnections");
+const QString ModuleConf::sTagPassword = QStringLiteral("sPassword");
+const QString ModuleConf::sTagPathCert = QStringLiteral("sPathCert");
+const QString ModuleConf::sTagPathKey = QStringLiteral("sPathKey");
+const QString ModuleConf::sTagTargetIP = QStringLiteral("sTargetIPorHostname");
+const QString ModuleConf::sTagTargetPort = QStringLiteral("uiTargetPort");
+const QString ModuleConf::sTagTargetPort1 = QStringLiteral("uiTargetPort1");
+const QString ModuleConf::sTagTargetPort2 = QStringLiteral("uiTargetPort2");
+const QString ModuleConf::sTagUID = QStringLiteral("sUID");
+const QString ModuleConf::sTagUsername = QStringLiteral("sUser");
+const QString ModuleConf::sTagZeroConf = QStringLiteral("aZeroConf");
+const QString ModuleConf::sTagZeroConfServiceActive = QStringLiteral("bPublish");
+const QString ModuleConf::sTagZeroConfServiceDomain = QStringLiteral("sDomain");
+const QString ModuleConf::sTagZeroConfServiceName = QStringLiteral("sServiceName");
+const QString ModuleConf::sTagZeroConfServicePort = QStringLiteral("uiPort");
+const QString ModuleConf::sTagZeroConfServiceType = QStringLiteral("sType");
+const QString ModuleConf::sTagZeroConfTXTrecord = QStringLiteral("aTextRecords");
+const QString ModuleConf::sTagZeroConfTXTrecordLabel = QStringLiteral("sLabel");
+const QString ModuleConf::sTagZeroConfTXTrecordValue = QStringLiteral("sValue");
+
+
 ModuleConf::ModuleConf(const QString sPath, QObject *pParent) :
 	PersistantObject(sPath, pParent) {
 

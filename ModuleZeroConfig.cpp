@@ -20,60 +20,10 @@ ModuleZeroConfig::~ModuleZeroConfig() {
 } // dealloc
 
 
-void ModuleZeroConfig::onAddServiceDescriptor(ZeroConfServiceDescriptor *pZCSD) {
-
-	if ((nullptr == pZCSD) || (pZCSD->isNull())) return;
-
-	this->apZCdescriptors.append(pZCSD);
-
-	// take ownership
-	pZCSD->setParent(this);
-
-	if (this->bRunning) this->publish(pZCSD);
-
-} // addService
-
-
 bool ModuleZeroConfig::executeBusCommand(const QString &sCommand,
 								 const QJsonObject &ojoMessage) {
 
 	return ModuleBase::executeBusCommand(sCommand, ojoMessage);
-
-
-	// an empty sender uid is valid -> respond to all modules
-	QString sSender = ojoMessage.value("sender").toString("");
-
-	// missing respond command means we can't respond, which is not required at times
-	QString sRespondCommand = ojoMessage.value("respondCommand").toString("NULL");
-	bool bRespond = (0 != sRespondCommand.compare("NULL"));
-
-	// prepare response object
-	QJsonObject ojoResponse;
-
-	if (0 == sCommand.compare("quit")) {
-
-		this->pAC->quit();
-
-		return true;
-
-	} else {
-
-		//this->onDebugMessage(tr("KO:Command not coded: " + sCommand));
-
-		// give base a chance to execute
-		return ModuleBase::executeBusCommand(sCommand, ojoMessage);
-
-	} // switch command
-
-	if (!bRespond) return true;
-
-	ojoResponse.insert("sender", this->pMC->moduleUID());
-	ojoResponse.insert("command", sRespondCommand);
-	ojoResponse.insert("context", ojoMessage.value("context").toString(""));
-
-	Q_EMIT this->busMessage(QStringList() << sSender, ojoResponse);
-
-	return true;
 
 } // executeCommand
 
@@ -112,6 +62,48 @@ void ModuleZeroConfig::init() {
 } // init
 
 
+void ModuleZeroConfig::onAddServiceDescriptor(ZeroConfServiceDescriptor *pZCSD) {
+
+	if ((nullptr == pZCSD) || (pZCSD->isNull())) return;
+
+	this->apZCdescriptors.append(pZCSD);
+
+	// take ownership
+	pZCSD->setParent(this);
+
+	if (this->bRunning) this->publish(pZCSD);
+
+} // onAddServiceDescriptor
+
+
+void ModuleZeroConfig::onRemoveServiceDescriptors(const QString &sUID) {
+
+	// make sure we clean up properly
+	this->onStartZeroConfServices(sUID);
+
+	ZeroConfServiceDescriptor *pZCSD;
+	QVector<ZeroConfServiceDescriptor *> ap2Bremoved;
+	for (int i = 0; i < this->apZCdescriptors.length(); ++i) {
+
+		pZCSD = this->apZCdescriptors.at(i);
+		if (0 == sUID.compare(pZCSD->moduleUID()))
+			ap2Bremoved.append(pZCSD);
+
+	} // loop
+
+	for (int i = 0; i < ap2Bremoved.length(); ++i) {
+
+		pZCSD = ap2Bremoved.at(i);
+		this->apZCdescriptors.removeOne(pZCSD);
+		delete pZCSD;
+
+	} // loop
+
+	ap2Bremoved.clear();
+
+} // onRemoveServiceDescriptors
+
+
 void ModuleZeroConfig::publish(ZeroConfServiceDescriptor *pZCSD) {
 
 	if ((nullptr == pZCSD) || pZCSD->isNull() || (!pZCSD->isActive())) return;
@@ -129,7 +121,7 @@ void ModuleZeroConfig::publish(ZeroConfServiceDescriptor *pZCSD) {
 	QString sValue;
 	for (int i = 0; i < ojaTextRecords.count(); ++i) {
 
-		ojoTextRecord = ojaTextRecords.at(i);
+		ojoTextRecord = ojaTextRecords.at(i).toObject();
 
 		sLabel = ojoTextRecord.value(ModuleConf::sTagZeroConfTXTrecordLabel).toString();
 		sValue = ojoTextRecord.value(ModuleConf::sTagZeroConfTXTrecordValue).toString();
@@ -140,8 +132,10 @@ void ModuleZeroConfig::publish(ZeroConfServiceDescriptor *pZCSD) {
 
 	} // loop
 
-	pService->startServicePublish(pZCSD->serviceName(), pZCSD->type(),
-								  pZCSD->domain(), pZCSD->port());
+	pService->startServicePublish(pZCSD->serviceName().toUtf8().data(),
+								  pZCSD->type().toUtf8().data(),
+								  pZCSD->domain().toUtf8().data(),
+								  pZCSD->port());
 
 } // publish
 

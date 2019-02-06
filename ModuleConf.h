@@ -20,38 +20,39 @@ class ModuleConf : public PersistantObject {
 private:
 
 protected:
-	const QString sTagActive = QStringLiteral("bActive");
-	const QString sTagClass = QStringLiteral("sClass");
-	const QString sTagListenIP = QStringLiteral("sListenIPorHostname");
-	const QString sTagListenPort = QStringLiteral("uiListenPort");
-	const QString sTagListenPort1 = QStringLiteral("uiListenPort1");
-	const QString sTagListenPort2 = QStringLiteral("uiListenPort2");
-	const QString sTagListIP = QStringLiteral("aListIP");
-	const QString sTagListIPisBlackNotWhite = QStringLiteral("bListIPisBlackNotWhite");
-	const QString sTagMaxConnections = QStringLiteral("uiMaxConnections");
-	const QString sTagPassword = QStringLiteral("sPassword");
-	const QString sTagPathCert = QStringLiteral("sPathCert");
-	const QString sTagPathKey = QStringLiteral("sPathKey");
-	const QString sTagTargetIP = QStringLiteral("sTargetIPorHostname");
-	const QString sTagTargetPort = QStringLiteral("uiTargetPort");
-	const QString sTagTargetPort1 = QStringLiteral("uiTargetPort1");
-	const QString sTagTargetPort2 = QStringLiteral("uiTargetPort2");
-	const QString sTagUID = QStringLiteral("sUID");
-	const QString sTagUsername = QStringLiteral("sUser");
-	const QString sTagZeroConf = QStringLiteral("aZeroConf");
-	const QString sTagZeroConfServiceActive = QStringLiteral("bPublish");
-	const QString sTagZeroConfServiceDomain = QStringLiteral("sDomain");
-	const QString sTagZeroConfServiceName = QStringLiteral("sServiceName");
-	const QString sTagZeroConfServicePort = QStringLiteral("uiPort");
-	const QString sTagZeroConfServiceType = QStringLiteral("sType");
-	const QString sTagZeroConfTXTrecord = QStringLiteral("aTextRecords");
-	const QString sTagZeroConfTXTrecordLabel = QStringLiteral("sLabel");
-	const QString sTagZeroConfTXTrecordValue = QStringLiteral("sValue");
 
 public:
 	static const QString sModuleAppControl;
 	static const QString sModuleBase;
 	static const QString sModuleZeroConfig;
+
+	static const QString sTagActive;
+	static const QString sTagClass;
+	static const QString sTagListenIP;
+	static const QString sTagListenPort;
+	static const QString sTagListenPort1;
+	static const QString sTagListenPort2;
+	static const QString sTagListIP;
+	static const QString sTagListIPisBlackNotWhite;
+	static const QString sTagMaxConnections;
+	static const QString sTagPassword;
+	static const QString sTagPathCert;
+	static const QString sTagPathKey;
+	static const QString sTagTargetIP;
+	static const QString sTagTargetPort;
+	static const QString sTagTargetPort1;
+	static const QString sTagTargetPort2;
+	static const QString sTagUID;
+	static const QString sTagUsername;
+	static const QString sTagZeroConf;
+	static const QString sTagZeroConfServiceActive;
+	static const QString sTagZeroConfServiceDomain;
+	static const QString sTagZeroConfServiceName;
+	static const QString sTagZeroConfServicePort;
+	static const QString sTagZeroConfServiceType;
+	static const QString sTagZeroConfTXTrecord;
+	static const QString sTagZeroConfTXTrecordLabel;
+	static const QString sTagZeroConfTXTrecordValue;
 
 	explicit ModuleConf(const QString sPath, QObject *pParent = nullptr);
 	virtual ~ModuleConf();

@@ -2,6 +2,7 @@
 #define SwissalpS_QtSssSapp_MODULECONF_H
 
 #include <QObject>
+#include <QJsonArray>
 #include <QJsonObject>
 
 #include "PersistantObject.h"
@@ -37,9 +38,19 @@ protected:
 	const QString sTagTargetPort2 = QStringLiteral("uiTargetPort2");
 	const QString sTagUID = QStringLiteral("sUID");
 	const QString sTagUsername = QStringLiteral("sUser");
+	const QString sTagZeroConf = QStringLiteral("aZeroConf");
+	const QString sTagZeroConfServiceActive = QStringLiteral("bPublish");
+	const QString sTagZeroConfServiceDomain = QStringLiteral("sDomain");
+	const QString sTagZeroConfServiceName = QStringLiteral("sServiceName");
+	const QString sTagZeroConfServicePort = QStringLiteral("uiPort");
+	const QString sTagZeroConfServiceType = QStringLiteral("sType");
+	const QString sTagZeroConfTXTrecord = QStringLiteral("aTextRecords");
+	const QString sTagZeroConfTXTrecordLabel = QStringLiteral("sLabel");
+	const QString sTagZeroConfTXTrecordValue = QStringLiteral("sValue");
 
 public:
 	static const QString sModuleAppControl;
+	static const QString sModuleBase;
 	static const QString sModuleZeroConfig;
 
 	explicit ModuleConf(const QString sPath, QObject *pParent = nullptr);
@@ -77,12 +88,15 @@ public:
 	virtual void setTargetPort1(const quint16 uiPort);
 	virtual void setTargetPort2(const quint16 uiPort) ;
 	virtual void setUser(const QString &sUser);
+	virtual void setZeroConf(const QJsonArray &ojaServiceDescriptors);
 
 	virtual QString targetIP() const;
 	virtual quint16 targetPort() const;
 	virtual quint16 targetPort1() const;
 	virtual quint16 targetPort2() const;
 	virtual QString user() const;
+	virtual QJsonArray zeroConf() const;
+
 signals:
 
 public slots:

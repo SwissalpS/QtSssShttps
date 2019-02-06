@@ -72,10 +72,30 @@ signals:
 	void modulesInitialized() const;
 	void modulesStarted() const;
 	void modulesStopped() const;
+	void registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor* pZCSD) const;
+	void startZeroConfServices(const QString &sUID) const;
+	void stopZeroConfServices(const QString &sUID) const;
+	void unregisterZeroConfServiceDescriptors(const QString &sUID) const;
 
 public slots:
+
 	void onBusMessage(const QStringList &asUIDs, const QJsonObject &ojoMessage);
 	void onDebugMessage(const QString &sMessage);
+	inline void onRegisterZeroConfServiceDescriptor(ZeroConfServiceDescriptor* pZCSD) {
+		Q_EMIT this->registerZeroConfServiceDescriptor(pZCSD); }
+
+	inline void onServiceErrorNameCollision() {}
+	inline void onServiceErrorRegistration() {}
+	inline void onZeroConfServiceError() {}
+	inline void onStartZeroConfServices(const QString &sUID) {
+		Q_EMIT this->startZeroConfServices(sUID); }
+
+	inline void onStopZeroConfServices(const QString &sUID) {
+		Q_EMIT this->stopZeroConfServices(sUID); }
+
+	inline void onUnregisterZeroConfServiceDescriptors(const QString &sUID) {
+		Q_EMIT this->unregisterZeroConfServiceDescriptors(sUID); }
+
 	void quit();
 	void run();
 

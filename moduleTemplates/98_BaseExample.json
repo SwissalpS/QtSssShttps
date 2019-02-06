@@ -1,0 +1,44 @@
+{
+	"bActive": false,
+	"sClass": "ModuleBase",
+	"sUID": "98BE",
+	"aZeroConf": [
+		{
+			"bPublish": false,
+			"sDomain": "local",
+			"sServiceName": "myCoolServer",
+			"uiPort": 80,
+			"sType": "_http._tcp",
+			"aTextRecords": [
+				{
+					"sLabel": "someLabel",
+					"sValue": "text-record-example",
+				},
+				{
+					"sLabel": "someLabelWithoutValue",
+				},
+			],
+		},
+		{
+			"bPublish": false,
+			"sDomain": "local",
+			"sServiceName": "mySecureMinimalInfoServer",
+			"uiPort": 443,
+			"sType": "_https._tcp",
+		},
+		{
+			"bPublish": false,
+			"sDomain": "local",
+			"sServiceName": "myMinetestGameServer",
+			"uiPort": 30000,
+			"sType": "_minetest._udp",
+		},
+		{
+			"bPublish": false,
+			"sDomain": "local",
+			"sServiceName": "myIRC",
+			"uiPort": 6697,
+			"sType": "_ircs-u._tcp",
+		},
+	],
+}

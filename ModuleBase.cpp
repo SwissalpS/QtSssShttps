@@ -33,6 +33,10 @@ void ModuleBase::die() {
 
 	this->onDebugMessage("die " + this->moduleUID() + ":" + this->pMC->moduleClass());
 
+	this->stop();
+
+	Q_EMIT this->unregisterZeroConfServiceDescriptors(this->moduleUID());
+
 } // die
 
 
@@ -190,7 +194,7 @@ void ModuleBase::initAuthentication() {
 	QHostAddress oHost;
 	for (int i = 0; i < asListBWraw.length(); ++i) {
 
-		oHost = stringToHostAddress(asListBWraw.at(i));
+		oHost = ModuleBase::stringToHostAddress(asListBWraw.at(i));
 		if (oHost.isNull()) continue;
 
 		this->asListBW.append(oHost.toString());
@@ -268,6 +272,18 @@ void ModuleBase::start() {
 
 	this->onDebugMessage("start " + this->moduleUID() + ":" + this->pMC->moduleClass());
 
+	QJsonArray ojaZC = this->pMC->zeroConf();
+	QJsonObject ojoZC;
+	for (int j = 0; j < ojaZC.count(); ++j) {
+
+		ojoZC = ojaZC.at(j);
+		Q_EMIT this->registerZeroConfServiceDescriptor(
+					new ZeroConfServiceDescriptor(this->moduleUID(), ojoZC));
+
+	} // loop each service
+
+	Q_EMIT this->startZeroConfServices(this->moduleUID());
+
 } // start
 
 
@@ -275,6 +291,8 @@ void ModuleBase::start() {
 void ModuleBase::stop() {
 
 	this->onDebugMessage("stop " + this->moduleUID() + ":" + this->pMC->moduleClass());
+
+	Q_EMIT this->stopZeroConfServices(this->moduleUID());
 
 } // stop
 

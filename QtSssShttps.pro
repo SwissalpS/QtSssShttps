@@ -58,13 +58,15 @@ HEADERS += \
 	ModuleAppControl.h \
 	ModuleBase.h \
 	ModuleConf.h \
+	ModuleZeroConfig.h \
 	PersistantObject.h \
 	WSSclient.h \
 	WSSserver.h \
 	WSSsession.h \
 	WWWSrequest.h \
 	WWWSserver.h \
-	WWWSsession.h
+	WWWSsession.h \
+	ZeroConfHelpers.h
 
 SOURCES += main.cpp \
 	AppController.cpp \
@@ -72,13 +74,15 @@ SOURCES += main.cpp \
 	ModuleAppControl.cpp \
 	ModuleBase.cpp \
 	ModuleConf.cpp \
+	ModuleZeroConfig.cpp \
 	PersistantObject.cpp \
 	WSSclient.cpp \
 	WSSserver.cpp \
 	WSSsession.cpp \
 	WWWSrequest.cpp \
 	WWWSserver.cpp \
-	WWWSsession.cpp
+	WWWSsession.cpp \
+	ZeroConfHelpers.cpp
 
 RESOURCES += \
 	QtSssShttps.qrc

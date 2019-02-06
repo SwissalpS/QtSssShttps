@@ -8,8 +8,8 @@
 namespace SwissalpS { namespace QtSssSapp {
 
 
-
 const QString ModuleConf::sModuleAppControl = QStringLiteral("ModuleAppControl");
+const QString ModuleConf::sModuleBase = QStringLiteral("ModuleBase");
 const QString ModuleConf::sModuleZeroConfig = QStringLiteral("ModuleZeroConfig");
 
 ModuleConf::ModuleConf(const QString sPath, QObject *pParent) :
@@ -418,6 +418,19 @@ void ModuleConf::setUser(const QString &sUser) {
 } // setUser
 
 
+void ModuleConf::setZeroConf(const QJsonArray &ojaServiceDescriptors) {
+
+	QJsonObject oJo = this->toJSONobject();
+
+	oJo.insert(sTagZeroConf, ojaServiceDescriptors);
+	this->oJdoc.setObject(oJo);
+
+	this->bChanged = true;
+	this->save();
+
+} // setZeroConf
+
+
 QString ModuleConf::targetIP() const {
 
 	return this->toJSONobject().value(sTagTargetIP).toString("255.255.255.255");
@@ -451,6 +464,13 @@ QString ModuleConf::user() const {
 	return this->toJSONobject().value(sTagUsername).toString("admin");
 
 } // user
+
+
+QJsonArray ModuleConf::zeroConf() const {
+
+	return this->toJSONobject().value(sTagZeroConf).toArray();
+
+} // zeroConf
 
 
 

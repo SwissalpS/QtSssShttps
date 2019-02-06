@@ -2,6 +2,8 @@
 	<qresource prefix="/">
 		<file>bin/makeKeys.sh</file>
 		<file>moduleTemplates/00_AppControl.json</file>
+		<file>moduleTemplates/98_BaseExample.json</file>
+		<file>moduleTemplates/99_ZeroConfig.json</file>
 		<file>www/moduleAppControl.html</file>
 	</qresource>
 </RCC>

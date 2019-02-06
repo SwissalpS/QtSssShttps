@@ -2,11 +2,14 @@
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QMutex>
 #include <QTimer>
 #include <iostream>
 
 #include "ModuleAppControl.h"
+#include "ModuleZeroConfig.h"
 
 #ifdef SssS_USE_GUI
 //#include "GUImainFrame.h"
@@ -198,6 +201,7 @@ void AppController::killModules() {
 } // killModules
 
 
+// instantiate the actual module-objects
 void AppController::loadModules() {
 
 	if (this->asModules.length()) {
@@ -212,10 +216,16 @@ void AppController::loadModules() {
 	this->hpModules.clear();
 
 	QVector<ModuleConf *> apMCs = this->pAS->moduleConfs();
+	// place-holder for iteration
 	ModuleConf *pMC;
+
+	// place-holders for all valid module-classes
+	ModuleAppControl *pMAC;
+	ModuleBase *pMB;
+	ModuleZeroConfig *pMZC;
+
 	QString sUID;
 	QString sClass;
-	ModuleAppControl *pMAC;
 	for (int i = 0; i < apMCs.length(); ++i) {
 
 		pMC = apMCs.at(i);
@@ -248,11 +258,89 @@ void AppController::loadModules() {
 			connect(pMAC, SIGNAL(debugMessage(QString)),
 					this, SLOT(onDebugMessage(QString)));
 
+			connect(pMAC, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
+					this, SLOT(onRegisterZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)));
+
+			connect(pMAC, SIGNAL(startZeroConfServices(QString)),
+					this, SLOT(onStartZeroConfServices(QString)));
+
+			connect(pMAC, SIGNAL(stopZeroConfServices(QString)),
+					this, SLOT(onStopZeroConfServices(QString)));
+
+			connect(pMAC, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
+					this, SLOT(onUnregisterZeroConfServiceDescriptors(QString)));
+
+		} else if (0 == sClass.compare(ModuleConf::sModuleBase)) {
+
+			// can be used to only use for ZeroConf publishing of
+			// services provided by other processes
+			pMB = new ModuleBase(pMC, this);
+			this->hpModules.insert(sUID, pMB);
+			this->asModules.append(sUID);
+
+			connect(pMB, SIGNAL(busMessage(QStringList,QJsonObject)),
+					this, SLOT(onBusMessage(QStringList,QJsonObject)));
+
+			connect(pMB, SIGNAL(debugMessage(QString)),
+					this, SLOT(onDebugMessage(QString)));
+
+			connect(pMB, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
+					this, SLOT(onRegisterZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)));
+
+			connect(pMB, SIGNAL(startZeroConfServices(QString)),
+					this, SLOT(onStartZeroConfServices(QString)));
+
+			connect(pMB, SIGNAL(stopZeroConfServices(QString)),
+					this, SLOT(onStopZeroConfServices(QString)));
+
+			connect(pMB, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
+					this, SLOT(onUnregisterZeroConfServiceDescriptors(QString)));
+
 		} else if (0 == sClass.compare(ModuleConf::sModuleZeroConfig)) {
 
-//			pMZC = new ModuleZeroConfig(pMC, this);
-//			this->hpModules.insert(sUID, pMZC);
-//			this->asModules.append(sUID);
+			pMZC = new ModuleZeroConfig(pMC, this);
+
+			connect(pMZC, SIGNAL(busMessage(QStringList,QJsonObject)),
+					this, SLOT(onBusMessage(QStringList,QJsonObject)));
+
+			connect(pMZC, SIGNAL(debugMessage(QString)),
+					this, SLOT(onDebugMessage(QString)));
+
+			connect(pMZC, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
+					pMZC, SLOT(onAddServiceDescriptor(ZeroConfServiceDescriptor*)));
+
+			connect(pMZC, SIGNAL(serviceError()),
+					this, SLOT(onZeroConfServiceError()));
+
+			connect(pMZC, SIGNAL(serviceErrorNameCollision()),
+					this, SLOT(onServiceErrorNameCollision()));
+
+			connect(pMZC, SIGNAL(serviceErrorRegistration()),
+					this, SLOT(onServiceErrorRegistration()));
+
+			connect(pMZC, SIGNAL(startZeroConfServices(QString)),
+					pMZC, SLOT(onStartZeroConfServices(QString)));
+
+			connect(pMZC, SIGNAL(stopZeroConfServices(QString)),
+					pMZC, SLOT(onStopZeroConfServices(QString)));
+
+			connect(pMZC, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
+					pMZC, SLOT(onRemoveServiceDescriptors(QString)));
+
+			connect(this, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
+					pMZC, SLOT(onAddServiceDescriptor(ZeroConfServiceDescriptor*)));
+
+			connect(this, SIGNAL(startZeroConfServices(QString)),
+					pMZC, SLOT(onStartZeroConfServices(QString)));
+
+			connect(this, SIGNAL(stopZeroConfServices(QString)),
+					pMZC, SLOT(onStopZeroConfServices(QString)));
+
+			connect(this, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
+					pMZC, SLOT(onRemoveServiceDescriptors(QString)));
+
+			this->hpModules.insert(sUID, pMZC);
+			this->asModules.append(sUID);
 
 		} else {
 

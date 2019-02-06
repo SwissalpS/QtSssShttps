@@ -8,6 +8,7 @@
 #include <QSslKey>
 
 #include "ModuleConf.h"
+#include "ZeroConfHelpers.h"
 
 
 
@@ -33,6 +34,9 @@ protected:
 	// provide a base preparation that can easily be over-ridden
 	// will not be called unless invoked (for now)
 	virtual void initSSL();
+
+	virtual void registerZeroConfServices();
+	virtual void unregisterZeroConfServices();
 
 public:
 	explicit ModuleBase(ModuleConf *pConf, QObject *pParent = nullptr);
@@ -65,6 +69,11 @@ public:
 signals:
 	void busMessage(const QStringList &asUIDs, const QJsonObject &ojoMessage) const;
 	void debugMessage(const QString &sMessage) const;
+	// don't emit these from within init()
+	void registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor *pZCSD) const;
+	void unregisterZeroConfServiceDescriptors(const QString &sUID) const;
+	void startZeroConfServices(const QString &sUID) const;
+	void stopZeroConfServices(const QString &sUID) const;
 
 public slots:
 	// to be overridden by subclass

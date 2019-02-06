@@ -1,15 +1,39 @@
 {
-    "aListIP": [
-        "127.0.0.1"
-    ],
-    "bActive": false,
-    "bListIPisBlackNotWhite": false,
-    "sClass": "ModuleAppControl",
-    "sListenIPorHostname": "localhost",
-    "sPassword": "-",
-    "sUID": "00AC",
-    "sUser": "admin",
-    "uiListenPort": 7770,
-    "uiListenPort1": 7771,
-    "uiMaxConnections": 25
+	"aListIP": [
+		"127.0.0.1"
+	],
+	"bActive": false,
+	"bListIPisBlackNotWhite": false,
+	"sClass": "ModuleAppControl",
+	"sListenIPorHostname": "localhost",
+	"sPassword": "-",
+	"sPathCert": "~/Documents/QtSssShttps/sslCert.pem",
+	"sPathKey": "~/Documents/QtSssShttps/sslKey",
+	"sUID": "00AC",
+	"sUser": "admin",
+	"uiListenPort": 7770,
+	"uiListenPort1": 7771,
+	"uiMaxConnections": 25,
+	"aZeroConf": [
+		{
+			"bPublish": false,
+			"sDomain": "local",
+			"sServiceName": "QtSssShttps:ModuleAppControl:https",
+			"uiPort": 7770,
+			"sType": "_https._tcp",
+			"aTextRecords": [
+				{
+					"sLabel": "example",
+					"sValue": "text-record-example"
+				},
+			],
+		},
+		{
+			"bPublish": false,
+			"sDomain": "local",
+			"sServiceName": "QtSssShttps:ModuleAppControl:wss",
+			"uiPort": 7771,
+			"sType": "_wss._tcp",
+		},
+	],
 }

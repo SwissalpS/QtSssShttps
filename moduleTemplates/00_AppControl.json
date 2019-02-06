@@ -25,15 +25,15 @@
 				{
 					"sLabel": "example",
 					"sValue": "text-record-example"
-				},
-			],
+				}
+			]
 		},
 		{
 			"bPublish": false,
 			"sDomain": "local",
 			"sServiceName": "QtSssShttps:ModuleAppControl:wss",
 			"uiPort": 7771,
-			"sType": "_wss._tcp",
-		},
-	],
+			"sType": "_wss._tcp"
+		}
+	]
 }

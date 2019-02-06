@@ -196,6 +196,9 @@ void ModuleZeroConfig::onServiceError(QZeroConf::error_t eError) {
 
 void ModuleZeroConfig::onStartZeroConfServices(const QString &sUID) {
 
+	// ignore if not active
+	if (!this->isActive()) return;
+
 	// make sure there are none running anymore
 	this->onStopZeroConfServices(sUID);
 

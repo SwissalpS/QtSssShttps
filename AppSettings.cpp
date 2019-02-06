@@ -492,7 +492,7 @@ void AppSettings::setupDirs(QString sPathBase) {
 
 	// make sure templates path exists
 	oPath.mkpath(this->getPathModuleTemplates());
-	this->copyResources(":/templates/", this->getPathModuleTemplates());
+	this->copyResources(":/moduleTemplates/", this->getPathModuleTemplates());
 
 	// also make a folder for executables and copy missing resources
 //	QString sPathBin = sPathBase + "bin/";

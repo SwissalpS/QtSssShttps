@@ -58,6 +58,7 @@ HEADERS += \
 	ModuleAppControl.h \
 	ModuleBase.h \
 	ModuleConf.h \
+	ModuleHTTPSserver.h \
 	ModuleZeroConfig.h \
 	PersistantObject.h \
 	WSSclient.h \
@@ -74,6 +75,7 @@ SOURCES += main.cpp \
 	ModuleAppControl.cpp \
 	ModuleBase.cpp \
 	ModuleConf.cpp \
+	ModuleHTTPSserver.cpp \
 	ModuleZeroConfig.cpp \
 	PersistantObject.cpp \
 	WSSclient.cpp \

@@ -330,8 +330,8 @@ void AppSettings::init() {
 
 void AppSettings::initOverrides() {
 
-	QCommandLineOption oCert("cert", "Local path to SSL-certificate", "path/to/cert.pem");
-	QCommandLineOption oKey("key", "Local path to SSL-key", "path/to/rsa.key");
+	//QCommandLineOption oCert("cert", "Local path to SSL-certificate", "path/to/cert.pem");
+	//QCommandLineOption oKey("key", "Local path to SSL-key", "path/to/rsa.key");
 	//QCommandLineOption oIP("ip", "Local IP to use.", "IP");
 	QCommandLineOption oPath("base-path", "Local path to use for settings etc.", "path");
 	//QCommandLineOption oPort("port", "Local port to use.", "port");
@@ -348,8 +348,8 @@ void AppSettings::initOverrides() {
 	oCLP.addHelpOption();
 	oCLP.addVersionOption();
 
-	oCLP.addOption(oCert);
-	oCLP.addOption(oKey);
+//	oCLP.addOption(oCert);
+//	oCLP.addOption(oKey);
 //	oCLP.addOption(oIP);
 	oCLP.addOption(oPath);
 //	oCLP.addOption(oPort);
@@ -363,8 +363,8 @@ void AppSettings::initOverrides() {
 	oCLP.process(*QCoreApplication::instance());
 
 	const QString sPath = oCLP.value(oPath).trimmed();
-	const QString sPathCert = oCLP.value(oCert);
-	const QString sPathKey = oCLP.value(oKey);
+//	const QString sPathCert = oCLP.value(oCert);
+//	const QString sPathKey = oCLP.value(oKey);
 //	const QString sIP = oCLP.value(oIP);
 //	const quint16 uiPort = oCLP.value(oPort).toUInt();
 	const bool bVerbose = oCLP.isSet(oVerbose);
@@ -379,13 +379,13 @@ void AppSettings::initOverrides() {
 		this->oJo.insert(sSettingPathBase, sPath);
 	} // if path base
 
-	if (!sPathCert.isEmpty()) {
-		this->oJo.insert(sSettingHTTPSpathCert, sPathCert);
-	} // if path cert
+//	if (!sPathCert.isEmpty()) {
+//		this->oJo.insert(sSettingHTTPSpathCert, sPathCert);
+//	} // if path cert
 
-	if (!sPathKey.isEmpty()) {
-		this->oJo.insert(sSettingHTTPSpathKey, sPathKey);
-	} // if path key
+//	if (!sPathKey.isEmpty()) {
+//		this->oJo.insert(sSettingHTTPSpathKey, sPathKey);
+//	} // if path key
 
 //	if (!sIP.isEmpty()) {
 //		this->oJo.insert(sSettingHTTPSip, sIP);

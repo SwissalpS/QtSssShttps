@@ -45,22 +45,26 @@ public:
 	static const QString sSettingHTTPSpathKey;
 	static const QString sSettingHTTPSip;
 	static const QString sSettingHTTPSport;
+	static const QString sSettingInteractive;
 	static const QString sSettingPathBase; // this one is not in settings.ini
 	static const QString sSettingPIDpathFile;
+	static const QString sSettingVerbose;
+
 #ifdef SssS_USE_GUI
 	static const QString sSettingUseGUI;
 #endif
-	static const QString sSettingVerbose;
 
 	static const QString sSettingHTTPSpathCertDefault;
 	static const QString sSettingHTTPSpathKeyDefault;
 	static const QString sSettingHTTPSipDefault;
 	static const quint16 uSettingHTTPSportDefault;
+	static const bool bSettingInteractiveDefault;
 	static const QString sSettingPIDpathFileDefault;
+	static const bool bSettingVerboseDefault;
+
 #ifdef SssS_USE_GUI
 	static const bool sSettingUseGUIdefault;
 #endif
-	static const bool bSettingVerboseDefault;
 
 	// destroy singelton
 	static void drop();

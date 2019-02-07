@@ -55,6 +55,7 @@ CONFIG(SssS_RasPi) {
 HEADERS += \
 	AppController.h \
 	AppSettings.h \
+	CLIresponder.h \
 	ModuleAppControl.h \
 	ModuleBase.h \
 	ModuleConf.h \
@@ -71,6 +72,7 @@ HEADERS += \
 SOURCES += main.cpp \
 	AppController.cpp \
 	AppSettings.cpp \
+	CLIresponder.cpp \
 	ModuleAppControl.cpp \
 	ModuleBase.cpp \
 	ModuleConf.cpp \

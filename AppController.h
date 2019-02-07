@@ -6,6 +6,7 @@
 #include <QTimer>
 
 #include "AppSettings.h"
+#include "CLIresponder.h"
 #include "ModuleBase.h"
 #include "WSSserver.h"
 
@@ -34,8 +35,10 @@ private:
 
 protected:
 	AppSettings *pAS;
+	CLIresponder *pCLI;
 	QHash<QString, ModuleBase *> hpModules; // for quick access
 	QStringList asModules; // for order
+	QStringList asModuleLoadErrorMessages;
 	QTimer *pTimerShutdown;
 #ifdef SssS_USE_GUI
 	bool bUseGUI;
@@ -51,6 +54,7 @@ protected:
 	void initSettings();
 	void killModules();
 	void loadModules();
+	void startCLI();
 	void writePID();
 
 protected slots:
@@ -65,6 +69,8 @@ public:
 
 	void startModules();
 	void stopModules();
+	inline QStringList moduleLoadErrors() const {
+		return this->asModuleLoadErrorMessages; }
 
 signals:
 	void debugMessageReceived(const QString &sMessage);

@@ -26,6 +26,7 @@ AppController *AppController::pSingelton = nullptr;
 AppController::AppController(QObject *pParent) :
 	QObject(pParent),
 	pAS(nullptr),
+	pCLI(nullptr),
 	pTimerShutdown(nullptr) {
 
 	this->asModules.clear();
@@ -212,6 +213,7 @@ void AppController::loadModules() {
 
 	} // if already loaded modules
 
+	this->asModuleLoadErrorMessages.clear();
 	this->asModules.clear();
 	this->hpModules.clear();
 
@@ -225,14 +227,18 @@ void AppController::loadModules() {
 	ModuleZeroConfig *pMZC;
 
 	QString sUID;
+	QString sUIDorig;
 	QString sClass;
+	QString sMessage;
 	for (int i = 0; i < apMCs.length(); ++i) {
 
 		pMC = apMCs.at(i);
 
 		if (!pMC->isOK()) {
 
-			this->onDebugMessage(tr("KO:could not load module at: ") + pMC->path());
+			sMessage = tr("KO:could not load module at: ") + pMC->path();
+			this->asModuleLoadErrorMessages.append(sMessage);
+			this->onDebugMessage(sMessage);
 			continue;
 
 		} // if did not load properly
@@ -240,9 +246,20 @@ void AppController::loadModules() {
 		sClass = pMC->moduleClass();
 
 		// make sure UID is unique
-		sUID = pMC->moduleUID();
+		sUID = sUIDorig = pMC->moduleUID();
 		while (this->hpModules.contains(sUID)) sUID += ".";
-		pMC->setModuleUID(sUID);
+		if (0 != sUID.compare(sUIDorig)) {
+
+			sMessage = tr("KO:duplicate UID changed (old:new): ")
+					   + sUIDorig + ":" + sUID + " " + tr("in file: ")
+					   + pMC->path();
+
+			this->asModuleLoadErrorMessages.append(sMessage);
+			this->onDebugMessage(sMessage);
+
+			pMC->setModuleUID(sUID);
+
+		} // if needed to adapt UID
 
 		this->onDebugMessage(tr("OK:Loading module: ") + sUID + ":" + sClass);
 
@@ -344,8 +361,11 @@ void AppController::loadModules() {
 
 		} else {
 
-			this->onDebugMessage(tr("KO:Unknown module class: ") + sClass
-								 + " " + tr("in: ") + pMC->path());
+			sMessage = tr("KO:Unknown module class: ") + sClass
+					   + " " + tr("in: ") + pMC->path();
+
+			this->asModuleLoadErrorMessages.append(sMessage);
+			this->onDebugMessage(sMessage);
 
 			continue;
 
@@ -452,15 +472,33 @@ void AppController::run() {
 	// TODO: check that ports are free
 	this->initModules();
 
+	bool bInteractive = this->pAS->get(AppSettings::sSettingInteractive).toBool();
+
 	// give gui a chance to init and connect
 #ifdef SssS_USE_GUI
-	// init GUI
-	this->initGUI();
+	if (!bInteractive) {
+		// init GUI
+		this->initGUI();
+	} // if not interactive CLI-mode
 #endif
 
 	this->startModules();
 
+	if (bInteractive) this->startCLI();
+
 } // run
+
+
+void AppController::startCLI() {
+
+	this->pCLI = new CLIresponder(this->pAS, this);
+
+	connect(this->pCLI, SIGNAL(debugMessage(QString)),
+			this, SLOT(onDebugMessage(QString)));
+
+	this->pCLI->start();
+
+} // startCLI
 
 
 void AppController::startModules() {

@@ -14,6 +14,7 @@ namespace SwissalpS { namespace QtSssSapp {
 
 const QString AppSettings::sSettingHTTPSpathCert = "sHTTPSpathCert";
 const QString AppSettings::sSettingHTTPSpathKey = "sHTTPSpathKey";
+const QString AppSettings::sSettingInteractive = "bInteractive";
 const QString AppSettings::sSettingPathBase = "sPathBase"; // not in ini file
 const QString AppSettings::sSettingPIDpathFile = "sPathFilePID";
 const QString AppSettings::sSettingVerbose = "bVerbose";
@@ -25,6 +26,7 @@ const QString AppSettings::sSettingUseGUI = "bUseGUI";
 
 const QString AppSettings::sSettingHTTPSpathCertDefault = "";
 const QString AppSettings::sSettingHTTPSpathKeyDefault = "";
+const bool AppSettings::bSettingInteractiveDefault = false;
 const QString AppSettings::sSettingPIDpathFileDefault = "";
 const bool AppSettings::bSettingVerboseDefault = false;
 
@@ -213,6 +215,10 @@ QVariant AppSettings::get(const QString sKey) const {
 
 		return QVariant(sPathFile);
 
+	} else if (sSettingInteractive == sKey) {
+
+		return this->pSettings->value(sKey, bSettingInteractiveDefault);
+
 	} else if (sSettingPathBase == sKey) {
 
 		return QVariant(this->sPathDataBase);
@@ -306,13 +312,13 @@ void AppSettings::init() {
 
 	pS->setValue(sSettingHTTPSpathCert, get(sSettingHTTPSpathCert));
 	pS->setValue(sSettingHTTPSpathKey, get(sSettingHTTPSpathKey));
+	pS->setValue(sSettingInteractive, this->get(sSettingInteractive));
 	pS->setValue(sSettingPIDpathFile, get(sSettingPIDpathFile));
+	pS->setValue(sSettingVerbose, this->get(sSettingVerbose));
 
 #ifdef SssS_USE_GUI
 	pS->setValue(sSettingUseGUI, get(sSettingUseGUI));
 #endif
-
-	pS->setValue(sSettingVerbose, this->get(sSettingVerbose));
 
 	this->pSettings->sync();
 
@@ -326,6 +332,7 @@ void AppSettings::initOverrides() {
 	QCommandLineOption oCert("cert", "Local path to SSL-certificate", "path/to/cert.pem");
 	QCommandLineOption oKey("key", "Local path to SSL-key", "path/to/rsa.key");
 	//QCommandLineOption oIP("ip", "Local IP to use.", "IP");
+	QCommandLineOption oInteractive(QStringList() << "i" << "interactive", "Run with command line interface.");
 	QCommandLineOption oPath("base-path", "Local path to use for settings etc.", "path");
 	//QCommandLineOption oPort("port", "Local port to use.", "port");
 	QCommandLineOption oVerbose(QStringList() << "V" << "verbose", "Be verbose.");
@@ -344,6 +351,7 @@ void AppSettings::initOverrides() {
 	oCLP.addOption(oCert);
 	oCLP.addOption(oKey);
 //	oCLP.addOption(oIP);
+	oCLP.addOption(oInteractive);
 	oCLP.addOption(oPath);
 //	oCLP.addOption(oPort);
 	oCLP.addOption(oVerbose);
@@ -359,6 +367,7 @@ void AppSettings::initOverrides() {
 	const QString sPathCert = oCLP.value(oCert);
 	const QString sPathKey = oCLP.value(oKey);
 //	const QString sIP = oCLP.value(oIP);
+	const bool bInteractive = oCLP.isSet(oInteractive);
 //	const quint16 uiPort = oCLP.value(oPort).toUInt();
 	const bool bVerbose = oCLP.isSet(oVerbose);
 #ifdef SssS_USE_GUI
@@ -392,7 +401,6 @@ void AppSettings::initOverrides() {
 		this->oJo.insert(sSettingVerbose, true);
 	} // if verbose
 
-
 #ifdef SssS_USE_GUI
 	if (bNoGUI) {
 		this->oJo.insert(sSettingUseGUI, false);
@@ -400,6 +408,15 @@ void AppSettings::initOverrides() {
 		this->oJo.insert(sSettingUseGUI, true);
 	} // if GUI or not
 #endif
+
+	// needs to be after verbose and gui switches
+	if (bInteractive) {
+		this->oJo.insert(sSettingInteractive, true);
+		this->oJo.insert(sSettingVerbose, false);
+#ifdef SssS_USE_GUI
+		this->oJo.insert(sSettingUseGUI, false);
+#endif
+	} // if interactive cli
 
 } // initOverrides
 

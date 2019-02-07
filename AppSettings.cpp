@@ -253,6 +253,13 @@ QVariant AppSettings::get(const QString sKey) const {
 } // get
 
 
+QString AppSettings::getPathBin() const {
+
+	return this->sPathDataBase + "bin/";
+
+} // getPathBin
+
+
 QString AppSettings::getPathData() const {
 
 	return this->sPathDataBase;
@@ -495,8 +502,8 @@ void AppSettings::setupDirs(QString sPathBase) {
 	this->copyResources(":/moduleTemplates/", this->getPathModuleTemplates());
 
 	// also make a folder for executables and copy missing resources
-//	QString sPathBin = sPathBase + "bin/";
-//	this->copyResources(":/omxScripts/", sPathBin, true);
+	QString sPathBin = sPathBase + "bin/";
+	this->copyResources(":/bin/", sPathBin, true);
 
 } // setupDirs
 

@@ -54,6 +54,8 @@ protected:
 	QHash<QString, WWWheader *> hspHeaders;
 
 public:
+	quint8 ubHandlerIndex;
+
 	explicit WWWSrequest(QByteArray &aubRaw, WWWSsession *pSession);
 	virtual ~WWWSrequest();
 
@@ -67,6 +69,9 @@ public:
 	virtual QString path() const;
 	virtual inline QByteArray rawRequest() const { return this->aubRaw; }
 	virtual inline QString request() const { return this->sRequest; }
+	virtual inline void setRequest(const QString &sRequestNew) {
+		this->sRequest = sRequestNew; }
+
 	virtual QSslSocket *socket() const;
 
 signals:

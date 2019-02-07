@@ -10,6 +10,16 @@ namespace SwissalpS { namespace QtSssSapp {
 
 const QString ModuleConf::sModuleAppControl = QStringLiteral("ModuleAppControl");
 const QString ModuleConf::sModuleBase = QStringLiteral("ModuleBase");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleEncryptedWebSocketServer");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleHTTPSfileServer");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleHTTPSnodeJSserver");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleHTTPSphpServer");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleHTTPSrubyServer");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleMediaServer");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleMediaPlayer");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleNibblersServer");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleNibblersPlayer");
+//const QString ModuleConf::sModule = QStringLiteral("ModuleShellRunner");
 const QString ModuleConf::sModuleZeroConfig = QStringLiteral("ModuleZeroConfig");
 
 const QString ModuleConf::sTagActive = QStringLiteral("bActive");

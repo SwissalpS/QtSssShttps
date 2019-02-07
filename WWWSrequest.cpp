@@ -38,7 +38,8 @@ WWWSrequest::WWWSrequest(QByteArray &aubRaw, WWWSsession *pSession) :
 	aubRaw(aubRaw),
 	sBody(""),
 	sMethod(""),
-	sRequest("") {
+	sRequest(""),
+	ubHandlerIndex(0u) {
 
 	this->hspHeaders.clear();
 

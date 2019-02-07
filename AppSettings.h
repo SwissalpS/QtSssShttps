@@ -74,6 +74,7 @@ public:
 
 	QVariant get(const QString sKey) const;
 
+	QString getPathBin() const;
 	QString getPathData() const;
 	QString getPathModules() const;
 	QString getPathModuleTemplates() const;

@@ -45,7 +45,6 @@ public:
 	ModuleAppControl(ModuleConf *pConf, QObject *pParent = nullptr);
 	virtual ~ModuleAppControl();
 
-	static QHostAddress stringToHostAddress(const QString &sHostOrIP);
 	void die() override;
 	bool executeBusCommand(const QString &sCommand, const QJsonObject &ojoMessage) override;
 	QStringList exposedBusCommands() const override;

@@ -23,7 +23,7 @@ class AppController : public QObject {
 	static AppController *pSingelton;
 	// keep this private as we want only one instance
 	// read; http://www.qtcentre.org/wiki/index.php?title=Singleton_pattern
-	explicit AppController(QObject *pParent = 0);
+	explicit AppController(QObject *pParent = nullptr);
 	// hide copy constructor
 	explicit AppController(const AppController &other);
 	// hide assign op

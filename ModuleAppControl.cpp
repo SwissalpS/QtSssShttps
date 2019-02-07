@@ -84,6 +84,12 @@ void ModuleAppControl::die() {
 
 	ModuleBase::die();
 
+	delete this->pWebSocketServer;
+	this->pWebSocketServer = nullptr;
+
+	delete this->pWWWSserver;
+	this->pWWWSserver = nullptr;
+
 } // die
 
 
@@ -339,10 +345,14 @@ void ModuleAppControl::stop() {
 
 void ModuleAppControl::stopWebSocketServer() {
 
+	this->pWebSocketServer->stop();
+
 } // stopWebSocketServer
 
 
 void ModuleAppControl::stopWWWserver() {
+
+	this->pWWWSserver->stop();
 
 } // stopWWWserver
 

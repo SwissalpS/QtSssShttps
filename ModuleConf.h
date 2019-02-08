@@ -24,6 +24,7 @@ protected:
 public:
 	static const QString sModuleAppControl;
 	static const QString sModuleBase;
+	static const QString sModuleHTTPSserver;
 	static const QString sModuleZeroConfig;
 
 	static const QString sTagActive;

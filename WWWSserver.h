@@ -20,6 +20,10 @@ namespace SwissalpS { namespace QtSssSapp {
 
 
 
+class WWWSresponse;
+
+
+
 class WWWSserver : public QTcpServer {
 
 	Q_OBJECT
@@ -67,8 +71,22 @@ public:
 
 	inline virtual QStringList listBW() const { return this->asListBW; }
 	inline virtual quint16 port() const { return this->uiPort; }
+	// TODO: refactor all* respond methods to create a WWWSresponse
+	// which this method merely fills up empty headers and then starts
+	// a chunked write that does not interfere with event-loop.
+	// That way any subclass of WWWSresponse can be sent here.
+	// also creating dirlist may need calls to event-loop.
+	// *simple header only responses such as 301 but also simple 404
+	virtual void respond(WWWSresponse *pResponse);
+	virtual void respond(WWWSrequest *pRequest, QString &sBody,
+						 const quint16 uiCode = 200u);
+	virtual void respond200(WWWSrequest *pRequest, const QString &sBody,
+					  const QString &sContentHeaderValue = "text/html");
 	virtual void respond404(WWWSrequest *pRequest);
-	virtual void respondPage(WWWSrequest *pRequest, QString &sBody);
+	virtual void respond301(WWWSrequest *pRequest, const QString &sURL);
+	virtual void respondDirList(WWWSrequest *pRequest, const QString &sPath);
+	virtual void respondFile(WWWSrequest *pRequest, const QString &sPathFile);
+	virtual void respondJSON(WWWSrequest *pRequest, const QString &sJSON);
 	inline virtual void setListBW(QStringList asList) { this->asListBW = asList; }
 	inline virtual void setListIsBlack(const bool bListIsBlackNotWhite) {
 		this->bListIsBlack = bListIsBlackNotWhite; }

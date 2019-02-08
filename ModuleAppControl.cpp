@@ -277,7 +277,7 @@ void ModuleAppControl::onWWWSrequest(WWWSrequest *pRequest) {
 	sBody.replace("##wssURI_SwissalpS_REPLACER_TAG##", sURI);
 	sBody.replace("##nonce_SwissalpS_REPLACER_TAG##", sNonce);
 
-	this->pWWWSserver->respondPage(pRequest, sBody);
+	this->pWWWSserver->respond(pRequest, sBody);
 
 } // onWWWSrequest
 

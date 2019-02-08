@@ -54,6 +54,7 @@ protected:
 	QHash<QString, WWWheader *> hspHeaders;
 
 public:
+	bool bRewritesDone;
 	quint8 ubHandlerIndex;
 
 	explicit WWWSrequest(QByteArray &aubRaw, WWWSsession *pSession);

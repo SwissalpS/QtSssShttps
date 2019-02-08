@@ -2,6 +2,7 @@
 #define SwissalpS_QtSssSapp_MODULEHTTPSSERVER_H
 
 #include <QObject>
+#include <QRegularExpression>
 
 #include "ModuleBase.h"
 #include "WWWSserver.h"
@@ -42,6 +43,10 @@ public slots:
 
 
 
+class WWWSresponse;
+
+
+
 class MHTTPSShandlerBase : public QObject {
 
 	Q_OBJECT
@@ -53,7 +58,7 @@ protected:
 protected slots:
 
 public:
-	explicit MHTTPSShandlerBase(const QString sPathBase,
+	explicit MHTTPSShandlerBase(const QString sPathBase = "",
 								QObject *pParent = nullptr) :
 		QObject(pParent),
 		pDelegate(nullptr),
@@ -61,6 +66,7 @@ public:
 
 	virtual ~MHTTPSShandlerBase() {}
 
+	inline virtual bool isRewriteHandlerClass() const { return false; }
 	inline virtual QString pathBase() const { return this->sPathBase; }
 	inline virtual void setDelegate(MHTTPSShandlerDelegateBase *pDelegate) {
 		if (this->pDelegate) disconnect(this->pDelegate);
@@ -73,6 +79,11 @@ public:
 												 : "" + sPathNew + "/"; }
 
 signals:
+	void respond(WWWSresponse *pResponse) const;
+	void respond(WWWSrequest *pRequest, const QString &sBody, const quint16 uiCode = 200) const;
+	void respond200(WWWSrequest *pRequest, const QString &sBody, const QString &sContentHeaderValue = "text/html") const;
+	void respond404(WWWSrequest *pRequest) const;
+	void respond301(WWWSrequest *pRequest, const QString &sURL) const;
 	void nextHandler(WWWSrequest *pRequest) const;
 	void debugMessage(const QString &sMessage) const;
 
@@ -155,21 +166,61 @@ class MHTTPSShandlerRedirect : public MHTTPSShandlerBase {
 
 	Q_OBJECT
 
+protected:
+	QRegularExpression oREsearch;
+	QString sREreplace;
+
 public:
-	explicit MHTTPSShandlerRedirect(const QString sPathBase,
+	explicit MHTTPSShandlerRedirect(QRegularExpression oSearch,
+									const QString &sReplace,
 									QObject *pParent = nullptr) :
-		MHTTPSShandlerBase(sPathBase, pParent) {}
+		MHTTPSShandlerBase("", pParent), oREsearch(oSearch),
+		sREreplace(sReplace) {}
 
 	virtual ~MHTTPSShandlerRedirect() {}
 
 signals:
-	void debugMessage(const QString &sMessage) const;
 
 public slots:
-	inline virtual void onDebugMessage(const QString &sMessage) const {
+	virtual void handle(WWWSrequest *pRequest) override;
+	inline virtual void onDebugMessage(const QString &sMessage) const override {
 		Q_EMIT this->debugMessage("MHTTPSShandlerRedirect:" + sMessage); }
 
 }; // MHTTPSShandlerRedirect
+
+
+
+class MHTTPSShandlerRewritePath : public MHTTPSShandlerBase {
+
+	Q_OBJECT
+
+protected:
+	bool bMatchIsFinal;
+	QRegularExpression oREsearch;
+	QString sREreplace;
+
+public:
+	explicit MHTTPSShandlerRewritePath(QRegularExpression oSearch,
+								   const QString &sReplace,
+								   const bool bMatchIsFinal = false,
+								   QObject *pParent = nullptr) :
+		MHTTPSShandlerBase("", pParent),
+		bMatchIsFinal(bMatchIsFinal),
+		oREsearch(oSearch),
+		sREreplace(sReplace) {}
+
+	virtual ~MHTTPSShandlerRewritePath() {}
+
+	inline virtual bool isRewriteHandlerClass() const override { return true; }
+
+signals:
+
+public slots:
+	virtual void handle(WWWSrequest *pRequest) override;
+	inline virtual void onDebugMessage(const QString &sMessage) const override {
+		Q_EMIT this->debugMessage("MHTTPSShandlerRewritePath:" + sMessage); }
+
+}; // MHTTPSShandlerRewritePath
 
 
 
@@ -208,6 +259,13 @@ public slots:
 
 	void onNextHandler(WWWSrequest *pRequest);
 	void onRequest(WWWSrequest *pRequest);
+	void onRespond(WWWSresponse *pResponse);
+	void onRespond(WWWSrequest *pRequest, const QString &sBody, const quint16 uiCode = 200);
+	void onRespond200(WWWSrequest *pRequest, const QString &sBody,
+					  const QString &sContentHeaderValue = "text/html");
+
+	void onRespond404(WWWSrequest *pRequest);
+	void onRespond301(WWWSrequest *pRequest, const QString &sURL);
 
 }; // ModuleHTTPSserver
 

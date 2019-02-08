@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "ModuleAppControl.h"
+#include "ModuleHTTPSserver.h"
 #include "ModuleZeroConfig.h"
 
 #ifdef SssS_USE_GUI
@@ -224,6 +225,7 @@ void AppController::loadModules() {
 	// place-holders for all valid module-classes
 	ModuleAppControl *pMAC;
 	ModuleBase *pMB;
+	ModuleHTTPSserver *pMHTTPSS;
 	ModuleZeroConfig *pMZC;
 
 	QString sUID;
@@ -269,23 +271,25 @@ void AppController::loadModules() {
 			this->hpModules.insert(sUID, pMAC);
 			this->asModules.append(sUID);
 
-			connect(pMAC, SIGNAL(busMessage(QStringList,QJsonObject)),
-					this, SLOT(onBusMessage(QStringList,QJsonObject)));
+			pMB = pMAC;
 
-			connect(pMAC, SIGNAL(debugMessage(QString)),
-					this, SLOT(onDebugMessage(QString)));
+//			connect(pMAC, SIGNAL(busMessage(QStringList,QJsonObject)),
+//					this, SLOT(onBusMessage(QStringList,QJsonObject)));
 
-			connect(pMAC, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
-					this, SLOT(onRegisterZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)));
+//			connect(pMAC, SIGNAL(debugMessage(QString)),
+//					this, SLOT(onDebugMessage(QString)));
 
-			connect(pMAC, SIGNAL(startZeroConfServices(QString)),
-					this, SLOT(onStartZeroConfServices(QString)));
+//			connect(pMAC, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
+//					this, SLOT(onRegisterZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)));
 
-			connect(pMAC, SIGNAL(stopZeroConfServices(QString)),
-					this, SLOT(onStopZeroConfServices(QString)));
+//			connect(pMAC, SIGNAL(startZeroConfServices(QString)),
+//					this, SLOT(onStartZeroConfServices(QString)));
 
-			connect(pMAC, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
-					this, SLOT(onUnregisterZeroConfServiceDescriptors(QString)));
+//			connect(pMAC, SIGNAL(stopZeroConfServices(QString)),
+//					this, SLOT(onStopZeroConfServices(QString)));
+
+//			connect(pMAC, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
+//					this, SLOT(onUnregisterZeroConfServiceDescriptors(QString)));
 
 		} else if (0 == sClass.compare(ModuleConf::sModuleBase)) {
 
@@ -295,23 +299,30 @@ void AppController::loadModules() {
 			this->hpModules.insert(sUID, pMB);
 			this->asModules.append(sUID);
 
-			connect(pMB, SIGNAL(busMessage(QStringList,QJsonObject)),
-					this, SLOT(onBusMessage(QStringList,QJsonObject)));
+		} else if (0 == sClass.compare(ModuleConf::sModuleHTTPSserver)) {
 
-			connect(pMB, SIGNAL(debugMessage(QString)),
-					this, SLOT(onDebugMessage(QString)));
+			pMHTTPSS = new ModuleHTTPSserver(pMC, this);
+			this->hpModules.insert(sUID, pMHTTPSS);
+			this->asModules.append(sUID);
+			pMB = pMHTTPSS;
 
-			connect(pMB, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
-					this, SLOT(onRegisterZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)));
+//			connect(pMHTTPSS, SIGNAL(busMessage(QStringList,QJsonObject)),
+//					this, SLOT(onBusMessage(QStringList,QJsonObject)));
 
-			connect(pMB, SIGNAL(startZeroConfServices(QString)),
-					this, SLOT(onStartZeroConfServices(QString)));
+//			connect(pMHTTPSS, SIGNAL(debugMessage(QString)),
+//					this, SLOT(onDebugMessage(QString)));
 
-			connect(pMB, SIGNAL(stopZeroConfServices(QString)),
-					this, SLOT(onStopZeroConfServices(QString)));
+//			connect(pMHTTPSS, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
+//					this, SLOT(onRegisterZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)));
 
-			connect(pMB, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
-					this, SLOT(onUnregisterZeroConfServiceDescriptors(QString)));
+//			connect(pMHTTPSS, SIGNAL(startZeroConfServices(QString)),
+//					this, SLOT(onStartZeroConfServices(QString)));
+
+//			connect(pMHTTPSS, SIGNAL(stopZeroConfServices(QString)),
+//					this, SLOT(onStopZeroConfServices(QString)));
+
+//			connect(pMHTTPSS, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
+//					this, SLOT(onUnregisterZeroConfServiceDescriptors(QString)));
 
 		} else if (0 == sClass.compare(ModuleConf::sModuleZeroConfig)) {
 
@@ -359,6 +370,10 @@ void AppController::loadModules() {
 			this->hpModules.insert(sUID, pMZC);
 			this->asModules.append(sUID);
 
+			this->onDebugMessage(tr("OK:Loaded module: ") + sUID + ":" + sClass);
+
+			continue;
+
 		} else {
 
 			sMessage = tr("KO:Unknown module class: ") + sClass
@@ -370,6 +385,24 @@ void AppController::loadModules() {
 			continue;
 
 		} // switch class
+
+		connect(pMB, SIGNAL(busMessage(QStringList,QJsonObject)),
+				this, SLOT(onBusMessage(QStringList,QJsonObject)));
+
+		connect(pMB, SIGNAL(debugMessage(QString)),
+				this, SLOT(onDebugMessage(QString)));
+
+		connect(pMB, SIGNAL(registerZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)),
+				this, SLOT(onRegisterZeroConfServiceDescriptor(ZeroConfServiceDescriptor*)));
+
+		connect(pMB, SIGNAL(startZeroConfServices(QString)),
+				this, SLOT(onStartZeroConfServices(QString)));
+
+		connect(pMB, SIGNAL(stopZeroConfServices(QString)),
+				this, SLOT(onStopZeroConfServices(QString)));
+
+		connect(pMB, SIGNAL(unregisterZeroConfServiceDescriptors(QString)),
+				this, SLOT(onUnregisterZeroConfServiceDescriptors(QString)));
 
 		this->onDebugMessage(tr("OK:Loaded module: ") + sUID + ":" + sClass);
 

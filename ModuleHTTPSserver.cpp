@@ -1,6 +1,7 @@
 #include "ModuleHTTPSserver.h"
 
 #include <QHostInfo>
+#include <QRegularExpressionMatch>
 
 
 
@@ -8,10 +9,67 @@ namespace SwissalpS { namespace QtSssSapp {
 
 
 
-ModuleHTTPSserver::ModuleHTTPSserver(ModuleConf *pConf, QObject *pParent) :
-	ModuleBase(pConf, pParent) {
+void MHTTPSShandlerRedirect::handle(WWWSrequest *pRequest) {
 
-} // construct
+	this->onDebugMessage(tr("MHTTPSShandlerRedirect::handle %1 %2")
+						 .arg(this->oREsearch.pattern()).arg(this->sREreplace));
+
+	QUrl oRequest(pRequest->request());
+	QString sPathOrig = oRequest.toString(QUrl::RemoveQuery);
+
+	QRegularExpressionMatch oMatch = this->oREsearch.match(sPathOrig);
+	if (oMatch.hasMatch()) {
+
+		//pRequest->session()->p
+
+		QString sPathNew = sPathOrig;
+		sPathNew.replace(this->oREsearch, this->sREreplace);
+
+		this->onDebugMessage(tr("OK:Rewrote path %1 to %2").arg(sPathOrig).arg(sPathNew));
+
+		pRequest->setRequest(sPathNew + oRequest.toString(QUrl::RemovePath));
+
+	} // if match found
+
+	Q_EMIT this->nextHandler(pRequest);
+
+} // MHTTPSShandlerRedirect::handle
+
+
+
+void MHTTPSShandlerRewritePath::handle(WWWSrequest *pRequest) {
+
+	this->onDebugMessage(tr("MHTTPSShandlerRewritePath::handle %1 %2")
+						 .arg(this->oREsearch.pattern()).arg(this->sREreplace));
+
+	QUrl oRequest(pRequest->request());
+	QString sPathOrig = oRequest.toString(QUrl::RemoveQuery);
+
+	QRegularExpressionMatch oMatch = this->oREsearch.match(sPathOrig);
+	if (oMatch.hasMatch()) {
+
+		if (this->bMatchIsFinal) pRequest->bRewritesDone = true;
+
+		QString sPathNew = sPathOrig;
+		sPathNew.replace(this->oREsearch, this->sREreplace);
+
+		this->onDebugMessage(tr("OK:Rewrote path %1 to %2").arg(sPathOrig).arg(sPathNew));
+
+		pRequest->setRequest(sPathNew + oRequest.toString(QUrl::RemovePath));
+
+	} // if match found
+
+	Q_EMIT this->nextHandler(pRequest);
+
+} // MHTTPSShandlerRewritePath::handle
+
+
+
+ModuleHTTPSserver::ModuleHTTPSserver(ModuleConf *pConf, QObject *pParent) :
+	ModuleBase(pConf, pParent),
+	pWWWSserver(nullptr) {
+
+} // ModuleHTTPSserver::construct
 
 
 ModuleHTTPSserver::~ModuleHTTPSserver() {
@@ -71,19 +129,38 @@ void ModuleHTTPSserver::initHandlers() {
 
 	QJsonArray ojaHandlers = this->pMC->toJSONobject().value("aHandlers").toArray();
 
+	int iTotalIn = ojaHandlers.count();
+
+	this->onDebugMessage(tr("OK:initiating %1 handler%2...")
+						 .arg(iTotalIn)
+						 .arg((1 == iTotalIn) ? "" : "s"));
+
 	for (int i = 0; i < ojaHandlers.count(); ++i) {
 
 		this->onAppendHandler(ojaHandlers.at(i).toObject());
 
 	} // loop
 
+	int iTotal = this->apHandlers.length();
+	this->onDebugMessage(QString("OK:initiated %1/%3 handler%2")
+						 .arg(iTotal)
+						 .arg((1 == iTotalIn) ? "" : "s")
+						 .arg(iTotalIn));
+
 } // initHandlers
 
 
 void ModuleHTTPSserver::onAppendHandler(QJsonObject ojoHandler) {
 
+	bool bActive = ojoHandler.value(ModuleConf::sTagActive).toBool(false);
+	if (!bActive) return;
+
 	QString sClass = ojoHandler.value(ModuleConf::sTagClass).toString();
+	QString sPathBase = ojoHandler.value("sDirRoot").toString();
+	QString sSearch = ojoHandler.value("sSearch").toString();
+	QString sReplace = ojoHandler.value("sReplace").toString();
 	MHTTPSShandlerBase *pHandler;
+
 	if (0 == sClass.compare("MHTTPSShandlerBase")) {
 
 		// ignore for now
@@ -91,10 +168,45 @@ void ModuleHTTPSserver::onAppendHandler(QJsonObject ojoHandler) {
 
 	} else if (0 == sClass.compare("MHTTPSShandlerRedirect")) {
 
+		QRegularExpression oRE(sSearch);
+		if (!oRE.isValid()) {
+
+			this->onDebugMessage("KO:Invalid regular expression found for MHTTPSShandlerRedirect: "
+								 + sSearch);
+
+			return;
+
+		} // if invalid regular expression given
+
+		MHTTPSShandlerRedirect *pHRed = new MHTTPSShandlerRedirect(
+											   oRE, sReplace, this);
+
+		pHandler = pHRed;
+
+	} else if (0 == sClass.compare("MHTTPSShandlerRewritePath")) {
+
+		QRegularExpression oRE(sSearch);
+		if (!oRE.isValid()) {
+
+			this->onDebugMessage("KO:Invalid regular expression found for MHTTPSShandlerRewritePath: "
+								 + sSearch);
+
+			return;
+
+		} // if invalid regular expression given
+
+		bool bMatchIsFinal = ojoHandler.value("bLeaveRewritesOnMatch").toBool(false);
+
+		MHTTPSShandlerRewritePath *pHRew = new MHTTPSShandlerRewritePath(
+											  oRE, sReplace, bMatchIsFinal, this);
+
+		pHandler = pHRew;
+
 	} else {
 
-		this->onDebugMessage("KO:Invalid class name for Handler for "
+		this->onDebugMessage("KO:Invalid Handler class name for "
 							 "ModuleHTTPSserver: " + sClass);
+
 		return;
 
 	} // switch class
@@ -106,13 +218,28 @@ void ModuleHTTPSserver::onAppendHandler(QJsonObject ojoHandler) {
 
 void ModuleHTTPSserver::onAppendHandler(MHTTPSShandlerBase *pHandler) {
 
-	this->apHandlers.append(pHandler);
-
 	connect(pHandler, SIGNAL(debugMessage(QString)),
 			this, SLOT(onDebugMessage(QString)));
 
 	connect(pHandler, SIGNAL(nextHandler(WWWSrequest*)),
 			this, SLOT(onNextHandler(WWWSrequest*)));
+
+	connect(pHandler, SIGNAL(respond(WWWSrequest*,QString,quint16)),
+			this, SLOT(onRespond(WWWSrequest*,QString,quint16)));
+
+	connect(pHandler, SIGNAL(respond(WWWSresponse*)),
+			this, SLOT(onRespond(WWWSresponse*)));
+
+	connect(pHandler, SIGNAL(respond200(WWWSrequest*,QString,QString)),
+			this, SLOT(onRespond200(WWWSrequest*,QString,QString)));
+
+	connect(pHandler, SIGNAL(respond301(WWWSrequest*,QString)),
+			this, SLOT(onRespond301(WWWSrequest*,QString)));
+
+	connect(pHandler, SIGNAL(respond404(WWWSrequest*)),
+			this, SLOT(onRespond404(WWWSrequest*)));
+
+	this->apHandlers.append(pHandler);
 
 } // onAppendHandler(MHTTPSShandlerBase)
 
@@ -121,21 +248,31 @@ void ModuleHTTPSserver::onNextHandler(WWWSrequest *pRequest) {
 
 	this->onDebugMessage("onNextHandler");
 
-	quint8 ubIndex = pRequest->ubHandlerIndex;
-	if (this->apHandlers.length() > ubIndex) {
+	bool bPolledAll = true;
+
+	MHTTPSShandlerBase *pHandler;
+	while (this->apHandlers.length() > pRequest->ubHandlerIndex) {
+
+		pHandler = this->apHandlers.at(pRequest->ubHandlerIndex);
 
 		pRequest->ubHandlerIndex++;
 
-		this->apHandlers.at(ubIndex)->handle(pRequest);
+		if (pHandler->isRewriteHandlerClass() && pRequest->bRewritesDone) continue;
 
-	} else this->pWWWSserver->respond404(pRequest);
+		bPolledAll = false;
+
+		pHandler->handle(pRequest);
+
+	} // loop until find one that is active
+
+	if (bPolledAll) this->pWWWSserver->respond404(pRequest);
 
 } // onNextHandler
 
 
 void ModuleHTTPSserver::onRequest(WWWSrequest *pRequest) {
 
-	this->onDebugMessage("onRequest");
+	this->onDebugMessage("onRequest " + QUrl(pRequest->request()).toString(QUrl::RemoveQuery));
 
 	if (!pRequest->socket()->isEncrypted()) {
 
@@ -150,6 +287,54 @@ void ModuleHTTPSserver::onRequest(WWWSrequest *pRequest) {
 	this->onNextHandler(pRequest);
 
 } // onRequest
+
+
+void ModuleHTTPSserver::onRespond(WWWSresponse *pResponse) {
+
+	this->onDebugMessage("onRespond pResponse");
+
+	this->pWWWSserver->respond(pResponse);
+
+} // onRespond pResponse
+
+
+void ModuleHTTPSserver::onRespond(WWWSrequest *pRequest, const QString &sBody,
+								  const quint16 uiCode) {
+
+	this->onDebugMessage("onRespond pRequest sBody uiCode");
+
+	this->pWWWSserver->respond(pRequest, sBody, uiCode);
+
+} // onRespond pRequest sBody uiCode
+
+
+void ModuleHTTPSserver::onRespond200(WWWSrequest *pRequest,
+									 const QString &sBody,
+									 const QString &sContentHeaderValue) {
+
+	this->onDebugMessage("onRespond200");
+
+	this->pWWWSserver->respond200(pRequest, sBody, sContentHeaderValue);
+
+} // onRespond200
+
+
+void ModuleHTTPSserver::onRespond404(WWWSrequest *pRequest) {
+
+	this->onDebugMessage("onRespond404");
+
+	this->pWWWSserver->respond404(pRequest);
+
+} // onRespond404
+
+
+void ModuleHTTPSserver::onRespond301(WWWSrequest *pRequest, const QString &sURL) {
+
+	this->onDebugMessage("onRespond301");
+
+	this->pWWWSserver->respond301(pRequest, sURL);
+
+} // onRespond301
 
 
 void ModuleHTTPSserver::start() {
@@ -211,6 +396,9 @@ QHostAddress ModuleHTTPSserver::stringToHostAddress(const QString &sHostOrIP) {
 	return oHost;
 
 } // stringToHostAddress
+
+
+
 
 
 

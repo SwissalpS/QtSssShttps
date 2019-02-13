@@ -18,9 +18,12 @@ WWWSserver::WWWSserver(QObject *pParent) :
 	bListIsBlack(false),
 	pTCPserver(nullptr),
 	sServerString("SwissalpS WWWSserver"),
+	uSessionCounter(0u),
 	uiMaxConnections(25u),
+	uiMaxRequestSize(2000000u),
 	uiPort(0u) {
 
+	this->asListBasePaths.clear();
 	this->asListBW.clear();
 	this->apSessions.clear();
 
@@ -42,13 +45,20 @@ QString WWWSserver::currentRFC7231date() {
 } // currentRFC7231date
 
 
+void WWWSserver::ignore(WWWSrequest *pRequest) {
+
+	pRequest->socket()->abort();
+
+} // ignore
+
+
 void WWWSserver::incomingConnection(qintptr ipSocketDescriptor) {
 
 	QSslSocket *pSSLsocket;
 	WWWSsession *pSession;
 
 	// prepare SSL socket
-	pSSLsocket = new QSslSocket(this);
+	pSSLsocket = new QSslSocket();
 	pSSLsocket->setLocalCertificate(this->oCertificate);
 	pSSLsocket->setPrivateKey(this->oPrivateKey);
 	pSSLsocket->setProtocol(QSsl::TlsV1SslV3);
@@ -76,9 +86,16 @@ void WWWSserver::incomingConnection(qintptr ipSocketDescriptor) {
 
 	} // if destroy connection
 
-	this->addPendingConnection(pSSLsocket);
-
 	pSession = new WWWSsession(pSSLsocket, this);
+	pSession->setMaxRequestSize(this->uiMaxRequestSize);
+	pSession->uSessionID = this->uSessionCounter++;
+
+	this->onDebugMessage("OK:Initiating connection "
+						 + QString::number(pSession->uSessionID)
+						 + " currently connected: "
+						 + QString::number(this->apSessions.length()+1));
+
+	this->addPendingConnection(pSSLsocket);
 
 	connect(pSession, SIGNAL(debugMessage(QString)),
 			this, SLOT(onDebugMessage(QString)));
@@ -128,7 +145,25 @@ bool WWWSserver::isBlockedIP(const QString &sIP) {
 } // isBlockedIP
 
 
+bool WWWSserver::isValidPath(const QString &sPath) {
+
+	QString sBasePath;
+	for (int i = 0; i < this->asListBasePaths.length(); ++i) {
+
+		sBasePath = this->asListBasePaths.at(i);
+		if (sPath.startsWith(sBasePath)) return true;
+
+	} // loop
+
+	return false;
+
+} // isValidPath
+
+
 void WWWSserver::onDisconnected(WWWSsession *pSession) {
+
+	this->onDebugMessage("onDisconnected "
+						 + QString::number(pSession->uSessionID));
 
 	this->apSessions.removeOne(pSession);
 	delete pSession;
@@ -138,8 +173,8 @@ void WWWSserver::onDisconnected(WWWSsession *pSession) {
 
 void WWWSserver::onNewConnection() {
 
-	this->onDebugMessage("--------------onNewConnection-----");
-
+	this->onDebugMessage("--------------onNewConnection----old attempt remove me-");
+return;
 	QTcpSocket *pTCPsocket;
 	QSslSocket *pSSLsocket;
 	WWWSsession *pSession;
@@ -261,36 +296,28 @@ void WWWSserver::respond(WWWSresponse *pResponse) {
 
 	this->onDebugMessage("respond pResponse");
 
-	// TODO:
+	connect(pResponse, SIGNAL(debugMessage(QString)),
+			this, SLOT(onDebugMessage(QString)));
+
+	if (pResponse->hasHeader("Server").isEmpty())
+		pResponse->addHeader("Server", this->sServerString);// this->serverString());
+
+	pResponse->startSending();
 
 } // respond pResponse
 
 
-void WWWSserver::respond(WWWSrequest *pRequest, QString &sBody,
+void WWWSserver::respond(WWWSrequest *pRequest, const QString &sBody,
 							 const quint16 uiCode) {
 
 	this->onDebugMessage("respond pRequest sBody uiCode");
 
-	// TODO: select coresponding uiCode
-	QString sCode = "OK";
+	WWWSresponse *pResponse = new WWWSresponse(pRequest);
+	pResponse->setBody(sBody);
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP
+	pResponse->setStatusCode(uiCode);
 
-	QString sHeader = "HTTP/1.1 %4 %5\r\n"
-			  "Date: %1\r\n"
-			  "Server: %2\r\n"
-			  "Content-Type: text/html\r\n"
-			  "Content-Encoding: utf8\r\n"
-			  "Connection: close\r\n"
-			  "Pragma: no-cache\r\n"
-			  "Content-Length : %3"
-			  "\r\n\r\n".arg(currentRFC7231date()).arg(this->sServerString)
-					  .arg(sBody.length()).arg(uiCode).arg(sCode);
-
-	QString sOut = sHeader + sBody;
-	QSslSocket *pSocket = pRequest->socket();
-
-	pSocket->write(sOut.toUtf8());
-	pSocket->flush();
-	pSocket->close();
+	this->respond(pResponse);
 
 } // respond pRequest sBody uiCode
 
@@ -298,24 +325,13 @@ void WWWSserver::respond(WWWSrequest *pRequest, QString &sBody,
 void WWWSserver::respond200(WWWSrequest *pRequest, const QString &sBody,
 							const QString &sContentHeaderValue) {
 
-	QString sHeader = "HTTP/1.1 %4 %5\r\n"
-			  "Date: %1\r\n"
-			  "Server: %2\r\n"
-			  "Content-Type: %6\r\n"
-			  "Content-Encoding: utf8\r\n"
-			  "Connection: close\r\n"
-			  "Pragma: no-cache\r\n"
-			  "Content-Length : %3"
-			  "\r\n\r\n".arg(currentRFC7231date()).arg(this->sServerString)
-					  .arg(sBody.length()).arg(200).arg("OK")
-					  .arg(sContentHeaderValue);
+	this->onDebugMessage("respond200");
 
-	QString sOut = sHeader + sBody;
-	QSslSocket *pSocket = pRequest->socket();
+	WWWSresponse *pResponse = new WWWSresponse(pRequest);
+	pResponse->setBody(sBody);
+	pResponse->addHeader("Content-Type", sContentHeaderValue);
 
-	pSocket->write(sOut.toUtf8());
-	pSocket->flush();
-	pSocket->close();
+	this->respond(pResponse);
 
 } // respond200
 
@@ -325,48 +341,38 @@ void WWWSserver::respond404(WWWSrequest *pRequest) {
 	this->onDebugMessage("respond404");
 
 	QString sBody = "<html><head><title>404 Not Found</title></head><body>404 Not Found<body></html>";
-	QString sHeader = "HTTP/1.1 404 Not Found\r\n"
-			  "Date: " + currentRFC7231date() + "\r\n"
-			  "Server: SwissalpS WWWSserver\r\n"
-			  "Content-Type: text/html\r\n"
-			  "Content-Encoding: utf8\r\n"
-			  "Connection: close\r\n"
-			  "Pragma: no-cache\r\n"
-			  "Content-Length : " + QString::number(sBody.length())
-			  + "\r\n\r\n";
 
-	QString sOut = sHeader + sBody;
-	QSslSocket *pSocket = pRequest->socket();
+	WWWSresponse *pResponse = new WWWSresponse(pRequest);
+	pResponse->setStatusCode(404u);
+	pResponse->setBody(sBody);
 
-	pSocket->write(sOut.toUtf8());
-	pSocket->flush();
-	pSocket->close();
+	this->respond(pResponse);
 
 } // respond404
 
 
 void WWWSserver::respond301(WWWSrequest *pRequest, const QString &sURL) {
 
-	QString sOut = "HTTP/1.1 %4 %5\r\n"
-			  "Date: %1\r\n"
-			  "Server: %2\r\n"
-			  "Location: %6\r\n"
-			  "Connection: close\r\n"
-			  "Pragma: no-cache\r\n"
-			  "Content-Length : %3"
-			  "\r\n\r\n".arg(currentRFC7231date()).arg(this->sServerString)
-					  .arg(0).arg(301).arg("Moved Permanently").arg(sURL);
+	this->onDebugMessage("respond301");
 
-	QSslSocket *pSocket = pRequest->socket();
+	WWWSresponse *pResponse = new WWWSresponse(pRequest);
+	pResponse->setStatusCode(301u);
+	pResponse->addHeader("Location", sURL);
 
-	pSocket->write(sOut.toUtf8());
-	pSocket->flush();
-	pSocket->close();
+	this->respond(pResponse);
 
 } // respond301
 
 
-void WWWSserver::respondDirList(WWWSrequest *pRequest, const QString &sPath) {
+void WWWSserver::respondDirectoryList(WWWSrequest *pRequest, const QString &sPath) {
+
+	if (!this->isValidPath(sPath)) {
+
+		this->onDebugMessage("KO:Requesting non-authorized path: " + sPath);
+		this->respond404(pRequest);
+		return;
+
+	} // if not an authorized path
 
 	QString sOut = "<!DOCTYPE html>\r\n"
 				   "<html>\n<head>\n"
@@ -376,16 +382,20 @@ void WWWSserver::respondDirList(WWWSrequest *pRequest, const QString &sPath) {
 				   "<div id=\"dirList\" class=\"dirListDIV\">"
 				   "<ol class=\"dirListOL\">";
 
-	QString sBasePath = QUrl(pRequest->request()).toString(QUrl::RemoveQuery
-														   | QUrl::RemoveScheme);
+	QString sBasePath = pRequest->targetOriginalQ().path();
+
 	if (!sBasePath.endsWith("/")) sBasePath += "/";
 	QString sName;
-	QStringList aList = QDir(sPath).entryList();
-	for (int i = 0; i < aList.lenghth(); ++i) {
+	QStringList aList = QDir(sPath).entryList(QDir::Dirs | QDir::Files
+											  | QDir::NoSymLinks
+											  | QDir::NoDotAndDotDot
+											  | QDir::Readable);
+	// NOTE: we limit directory length hardcoded here... maybe refactor...
+	for (int i = 0; i < qMin(2000, aList.length()); ++i) {
 
 		sName = aList.at(i);
 
-		// don't list hidden items
+		// don't list hidden items (should be dealt with by QDir::Filters)
 		if (sName.startsWith(".")) continue;
 
 		sOut += "<li class=\"dirListLI\">"
@@ -405,111 +415,37 @@ void WWWSserver::respondDirList(WWWSrequest *pRequest, const QString &sPath) {
 
 void WWWSserver::respondFile(WWWSrequest *pRequest, const QString &sPathFile) {
 
-	QMimeDatabase oMdb;
-	QString sMimeType = oMdb.mimeTypeForFile(sPathFile).name();
+	this->onDebugMessage("respondFile");
 
-	QByteArray aFile;
 	QFile oFile(sPathFile);
-
 	if (!oFile.open(QIODevice::ReadOnly)) {
 
-		this->onDebugMessage(tr("Failed to read: ") + sPathFile);
+		this->onDebugMessage(tr("Failed to open: ") + sPathFile);
 
 		this->respond404(pRequest);
 
 		return;
 
 	} // if file did not open
+	oFile.close();
 
-	// \r needs to be before \n
-	QString sHeader = "HTTP/1.1 %4 %5\r\n"
-			  "Date: %1\r\n"
-			  "Server: %2\r\n"
-			  "Content-Type: %6\r\n"
-			  "Content-Encoding: utf8\r\n"
-			  "Connection: close\r\n"
-			  "Pragma: no-cache\r\n"
-			  "Content-Length : %3"
-			  "\r\n\r\n".arg(currentRFC7231date()).arg(this->sServerString)
-					  .arg(oFile.size()).arg(200).arg("OK")
-					  .arg(sMimeType);
+	WWWSresponse *pResponse = new WWWSresponse(pRequest);
+	pResponse->setFile(sPathFile);
 
-	QSslSocket *pSocket = pRequest->socket();
-
-	pSocket->write(sHeader.toUtf8());
-
-	int iBufferSize = 16000;
-	aFile.resize(iBufferSize);
-	qint64 iRead;
-
-	while (!oFile.atEnd()) {
-
-		iRead = oFile.read(aFile.data(), iBufferSize);
-
-		// If an error occurred during the read, emit an error
-		if (-1 == iRead) {
-
-			this->onDebugMessage(tr("KO:error reading file. ")
-								 + oFile.errorString());
-
-			pSocket->flush();
-			pSocket->close();
-
-			return;
-
-		} // if error reading
-
-		// Write the data to the destination device
-		if (-1 == pSocket->write(aFile.constData(), iRead)) {
-
-			this->onDebugMessage(tr("KO:error writing to client. ")
-								+ pSocket->errorString());
-
-			pSocket->flush();
-			pSocket->close();
-
-			return;
-
-		} // if error writing
-
-	} // loop while !oFile.atEnd()
-
-	pSocket->flush();
-	pSocket->close();
-
-	// TODO: implement something like bellow to keep interface responsive
-//    // Check if the end of the device has been reached - if so,
-//    // emit the finished signal and if not, continue to read
-//    // data at the next iteration of the event loop
-//    if(src->atEnd()) {
-//        Q_EMIT q->finished();
-//    } else {
-//        QTimer::singleShot(0, this, SLOT(nextBlock()));
-//    }
+	this->respond(pResponse);
 
 } // respondFile
 
 
 void WWWSserver::respondJSON(WWWSrequest *pRequest, const QString &sJSON) {
 
-	QString sHeader = "HTTP/1.1 %4 %5\r\n"
-			  "Date: %1\r\n"
-			  "Server: %2\r\n"
-			  "Content-Type: %6\r\n"
-			  "Content-Encoding: utf8\r\n"
-			  "Connection: close\r\n"
-			  "Pragma: no-cache\r\n"
-			  "Content-Length : %3"
-			  "\r\n\r\n".arg(currentRFC7231date()).arg(this->sServerString)
-					  .arg(sBody.length()).arg(200).arg("OK")
-					  .arg("application/json");
+	this->onDebugMessage("respondJSON");
 
-	QString sOut = sHeader + sJSON;
-	QSslSocket *pSocket = pRequest->socket();
+	WWWSresponse *pResponse = new WWWSresponse(pRequest);
+	pResponse->setBody(sJSON);
+	pResponse->addHeader("Content-Type", "application/json");
 
-	pSocket->write(sOut.toUtf8());
-	pSocket->flush();
-	pSocket->close();
+	this->respond(pResponse);
 
 } // respondJSON
 

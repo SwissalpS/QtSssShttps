@@ -55,6 +55,12 @@ CONFIG(SssS_RasPi) {
 HEADERS += \
 	AppController.h \
 	AppSettings.h \
+	MHTTPSShandlerBase.h \
+	MHTTPSShandlerDelegateBase.h \
+	MHTTPSShandlerDrop.h \
+	MHTTPSShandlerFileServer.h \
+	MHTTPSShandlerRedirect.h \
+	MHTTPSShandlerRewritePath.h \
 	ModuleAppControl.h \
 	ModuleBase.h \
 	ModuleConf.h \
@@ -64,7 +70,9 @@ HEADERS += \
 	WSSclient.h \
 	WSSserver.h \
 	WSSsession.h \
+	WWWheader.h \
 	WWWSrequest.h \
+	WWWSresponse.h \
 	WWWSserver.h \
 	WWWSsession.h \
 	ZeroConfHelpers.h
@@ -72,6 +80,12 @@ HEADERS += \
 SOURCES += main.cpp \
 	AppController.cpp \
 	AppSettings.cpp \
+	MHTTPSShandlerBase.cpp \
+	MHTTPSShandlerDelegateBase.cpp \
+	MHTTPSShandlerDrop.cpp \
+	MHTTPSShandlerFileServer.cpp \
+	MHTTPSShandlerRedirect.cpp \
+	MHTTPSShandlerRewritePath.cpp \
 	ModuleAppControl.cpp \
 	ModuleBase.cpp \
 	ModuleConf.cpp \
@@ -81,7 +95,9 @@ SOURCES += main.cpp \
 	WSSclient.cpp \
 	WSSserver.cpp \
 	WSSsession.cpp \
+	WWWheader.cpp \
 	WWWSrequest.cpp \
+	WWWSresponse.cpp \
 	WWWSserver.cpp \
 	WWWSsession.cpp \
 	ZeroConfHelpers.cpp

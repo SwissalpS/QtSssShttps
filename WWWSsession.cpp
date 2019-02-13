@@ -14,15 +14,21 @@ namespace SwissalpS { namespace QtSssSapp {
 WWWSsession::WWWSsession(QSslSocket *pSocket, QObject *pParent) :
 	QObject(pParent),
 	pSocket(pSocket),
-	pRequest(nullptr) {
+	pRequest(nullptr),
+	uiMaxRequestSize(2000000u),
+	uSessionID(0u) {
 
 	if (nullptr == pSocket) {
 
 		qFatal("KO::Passed null QWebSocket to WWWSsession constructor!");
+		Q_EMIT this->disconnected(this);
 
 		return;
 
 	} // if null passed
+
+	// this did not play well
+	//this->pSocket->setParent(this);
 
 //	connect(this->pSocket, SIGNAL(aboutToClose()),
 //			this, SLOT(onAboutToClose));
@@ -89,13 +95,6 @@ WWWSsession::~WWWSsession() {
 } // dealloc
 
 
-QString WWWSsession::currentRFC7231date() {
-
-	return QDateTime::currentDateTimeUtc().toString("ddd, d MMM yyyy hh:mm:ss") + " GMT";
-
-} // currentRFC7231date
-
-
 void WWWSsession::start() {
 
 	this->onDebugMessage("start");
@@ -127,9 +126,9 @@ void WWWSsession::onEncrypted() {
 
 
 void WWWSsession::onEncryptedBytesWritten(const qint64 illCount) {
+	Q_UNUSED(illCount)
 
-	this->onDebugMessage("onEncryptedBytesWritten " + QString::number(illCount));
-
+	//this->onDebugMessage("onEncryptedBytesWritten " + QString::number(illCount));
 
 } // onEncryptedBytesWritten
 
@@ -267,7 +266,8 @@ void WWWSsession::onReadyRead() {
 
 	} // if not encrypted
 
-	QByteArray aubRaw = this->pSocket->readAll();
+	// Limit initial amount
+	QByteArray aubRaw = this->pSocket->read(this->uiMaxRequestSize);
 	WWWSrequest *pRequest = new WWWSrequest(aubRaw, this);
 
 	if (pRequest->isNull()) {

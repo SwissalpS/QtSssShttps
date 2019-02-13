@@ -30,7 +30,7 @@ include(QtZeroConf/qtzeroconf.pri)
 DEFINES += QZEROCONF_STATIC
 
 ## AppVersion format major_minor
-VERSION = 0.0.1
+VERSION = 0.0.3
 ## App name short (no spaces, :, ;, /, \ etc.)
 ## next portion will use this to make a longer one
 SssS_APP_NAME = QtSssShttps

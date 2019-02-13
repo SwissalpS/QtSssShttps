@@ -24,6 +24,7 @@ const QString ModuleConf::sModuleHTTPSserver = QStringLiteral("ModuleHTTPSserver
 const QString ModuleConf::sModuleZeroConfig = QStringLiteral("ModuleZeroConfig");
 
 const QString ModuleConf::sTagActive = QStringLiteral("bActive");
+const QString ModuleConf::sTagBasePaths = QStringLiteral("aBasePaths");
 const QString ModuleConf::sTagClass = QStringLiteral("sClass");
 const QString ModuleConf::sTagListenIP = QStringLiteral("sListenIPorHostname");
 const QString ModuleConf::sTagListenPort = QStringLiteral("uiListenPort");
@@ -32,6 +33,11 @@ const QString ModuleConf::sTagListenPort2 = QStringLiteral("uiListenPort2");
 const QString ModuleConf::sTagListIP = QStringLiteral("aListIP");
 const QString ModuleConf::sTagListIPisBlackNotWhite = QStringLiteral("bListIPisBlackNotWhite");
 const QString ModuleConf::sTagMaxConnections = QStringLiteral("uiMaxConnections");
+const QString ModuleConf::sTagMHTTPSSHdirectoryIndex = QStringLiteral("sDirectoryIndex");
+const QString ModuleConf::sTagMHTTPSSHfileExtension = QStringLiteral("sFileExtension");
+const QString ModuleConf::sTagMHTTPSSHfileSocketPath = QStringLiteral("sFileSocketPath");
+const QString ModuleConf::sTagMHTTPSSHfileSocketStarter = QStringLiteral("sFileSocketStarter");
+const QString ModuleConf::sTagMHTTPSSHlistDirectories = QStringLiteral("bListDirectories");
 const QString ModuleConf::sTagPassword = QStringLiteral("sPassword");
 const QString ModuleConf::sTagPathCert = QStringLiteral("sPathCert");
 const QString ModuleConf::sTagPathKey = QStringLiteral("sPathKey");
@@ -63,6 +69,22 @@ ModuleConf::ModuleConf(const QString sPath, QObject *pParent) :
 ModuleConf::~ModuleConf() {
 
 } // dealloc
+
+
+QStringList ModuleConf::basePaths() const {
+
+	QJsonArray oList = this->toJSONobject().value(sTagBasePaths).toArray();
+	QStringList asList;
+
+	for (int i = 0; i < oList.count(); ++i) {
+
+		asList << oList.at(i).toString();
+
+	} // loop
+
+	return  asList;
+
+} // basePaths
 
 
 bool ModuleConf::isActive() const {
@@ -179,6 +201,27 @@ void ModuleConf::setActive(const bool bActive) {
 	this->save();
 
 } // setActive
+
+
+void ModuleConf::setBasePaths(const QStringList &asList) {
+
+	QJsonObject oJo = this->toJSONobject();
+
+	QJsonArray oList;
+
+	for (int i = 0; i < asList.length(); ++i) {
+
+		oList << asList.at(i);
+
+	} // loop
+
+	oJo.insert(sTagBasePaths, oList);
+	this->oJdoc.setObject(oJo);
+
+	this->bChanged = true;
+	this->save();
+
+} // setBasePaths
 
 
 void ModuleConf::setListBlackOrWhite(const bool bBlackNotWhite) {

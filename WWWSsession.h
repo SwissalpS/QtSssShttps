@@ -14,7 +14,8 @@ namespace SwissalpS { namespace QtSssSapp {
 class WWWSrequest;
 
 
-
+// is owned by WWWSserver
+// owns WWWSrequest and deletes QSslSocket
 class WWWSsession : public QObject {
 
 	Q_OBJECT
@@ -24,13 +25,19 @@ private:
 protected:
 	QSslSocket *pSocket;
 	WWWSrequest *pRequest;
+	uint uiMaxRequestSize;
 
 public:
+	quint64 uSessionID;
 	explicit WWWSsession(QSslSocket *pSocket, QObject *pParent = nullptr);
 	virtual ~WWWSsession();
 
-	static QString currentRFC7231date();
+	inline virtual uint maxRequestSize() const { return this->uiMaxRequestSize; }
+	inline virtual void setMaxRequestSize(const uint uiNewSize) {
+		this->uiMaxRequestSize = uiNewSize; }
+
 	virtual inline QSslSocket *socket() const { return this->pSocket; }
+	// start the connection process
 	virtual void start();
 
 signals:

@@ -1,67 +1,17 @@
 #include "ModuleHTTPSserver.h"
 
+#include <QDir>
+#include <QFileInfo>
 #include <QHostInfo>
 #include <QRegularExpressionMatch>
+
+#include "MHTTPSShandlerDrop.h"
+#include "MHTTPSShandlerFileServer.h"
+#include "MHTTPSShandlerRewritePath.h"
 
 
 
 namespace SwissalpS { namespace QtSssSapp {
-
-
-
-void MHTTPSShandlerRedirect::handle(WWWSrequest *pRequest) {
-
-	this->onDebugMessage(tr("MHTTPSShandlerRedirect::handle %1 %2")
-						 .arg(this->oREsearch.pattern()).arg(this->sREreplace));
-
-	QUrl oRequest(pRequest->request());
-	QString sPathOrig = oRequest.toString(QUrl::RemoveQuery);
-
-	QRegularExpressionMatch oMatch = this->oREsearch.match(sPathOrig);
-	if (oMatch.hasMatch()) {
-
-		//pRequest->session()->p
-
-		QString sPathNew = sPathOrig;
-		sPathNew.replace(this->oREsearch, this->sREreplace);
-
-		this->onDebugMessage(tr("OK:Rewrote path %1 to %2").arg(sPathOrig).arg(sPathNew));
-
-		pRequest->setRequest(sPathNew + oRequest.toString(QUrl::RemovePath));
-
-	} // if match found
-
-	Q_EMIT this->nextHandler(pRequest);
-
-} // MHTTPSShandlerRedirect::handle
-
-
-
-void MHTTPSShandlerRewritePath::handle(WWWSrequest *pRequest) {
-
-	this->onDebugMessage(tr("MHTTPSShandlerRewritePath::handle %1 %2")
-						 .arg(this->oREsearch.pattern()).arg(this->sREreplace));
-
-	QUrl oRequest(pRequest->request());
-	QString sPathOrig = oRequest.toString(QUrl::RemoveQuery);
-
-	QRegularExpressionMatch oMatch = this->oREsearch.match(sPathOrig);
-	if (oMatch.hasMatch()) {
-
-		if (this->bMatchIsFinal) pRequest->bRewritesDone = true;
-
-		QString sPathNew = sPathOrig;
-		sPathNew.replace(this->oREsearch, this->sREreplace);
-
-		this->onDebugMessage(tr("OK:Rewrote path %1 to %2").arg(sPathOrig).arg(sPathNew));
-
-		pRequest->setRequest(sPathNew + oRequest.toString(QUrl::RemovePath));
-
-	} // if match found
-
-	Q_EMIT this->nextHandler(pRequest);
-
-} // MHTTPSShandlerRewritePath::handle
 
 
 
@@ -116,6 +66,7 @@ void ModuleHTTPSserver::init() {
 	this->pWWWSserver->setListBW(this->asListBW);
 	this->pWWWSserver->setListIsBlack(this->pMC->isListBlack());
 	this->pWWWSserver->setMaxConnections(this->pMC->maxConnections());
+	this->pWWWSserver->setBasePaths(this->pMC->basePaths());
 
 	QHostAddress oHost = ModuleBase::stringToHostAddress(this->pMC->localIP());
 
@@ -156,9 +107,6 @@ void ModuleHTTPSserver::onAppendHandler(QJsonObject ojoHandler) {
 	if (!bActive) return;
 
 	QString sClass = ojoHandler.value(ModuleConf::sTagClass).toString();
-	QString sPathBase = ojoHandler.value("sDirRoot").toString();
-	QString sSearch = ojoHandler.value("sSearch").toString();
-	QString sReplace = ojoHandler.value("sReplace").toString();
 	MHTTPSShandlerBase *pHandler;
 
 	if (0 == sClass.compare("MHTTPSShandlerBase")) {
@@ -166,39 +114,31 @@ void ModuleHTTPSserver::onAppendHandler(QJsonObject ojoHandler) {
 		// ignore for now
 		return;
 
+	} else if (0 == sClass.compare("MHTTPSShandlerDrop")) {
+
+		MHTTPSShandlerDrop *pHDrop = new MHTTPSShandlerDrop(
+											   ojoHandler, this);
+
+		pHandler = pHDrop;
+
+	} else if (0 == sClass.compare("MHTTPSShandlerFileServer")) {
+
+		MHTTPSShandlerFileServer *pHDrop = new MHTTPSShandlerFileServer(
+											   ojoHandler, this);
+
+		pHandler = pHDrop;
+
 	} else if (0 == sClass.compare("MHTTPSShandlerRedirect")) {
 
-		QRegularExpression oRE(sSearch);
-		if (!oRE.isValid()) {
-
-			this->onDebugMessage("KO:Invalid regular expression found for MHTTPSShandlerRedirect: "
-								 + sSearch);
-
-			return;
-
-		} // if invalid regular expression given
-
 		MHTTPSShandlerRedirect *pHRed = new MHTTPSShandlerRedirect(
-											   oRE, sReplace, this);
+											   ojoHandler, this);
 
 		pHandler = pHRed;
 
 	} else if (0 == sClass.compare("MHTTPSShandlerRewritePath")) {
 
-		QRegularExpression oRE(sSearch);
-		if (!oRE.isValid()) {
-
-			this->onDebugMessage("KO:Invalid regular expression found for MHTTPSShandlerRewritePath: "
-								 + sSearch);
-
-			return;
-
-		} // if invalid regular expression given
-
-		bool bMatchIsFinal = ojoHandler.value("bLeaveRewritesOnMatch").toBool(false);
-
 		MHTTPSShandlerRewritePath *pHRew = new MHTTPSShandlerRewritePath(
-											  oRE, sReplace, bMatchIsFinal, this);
+											  ojoHandler, this);
 
 		pHandler = pHRew;
 
@@ -221,6 +161,9 @@ void ModuleHTTPSserver::onAppendHandler(MHTTPSShandlerBase *pHandler) {
 	connect(pHandler, SIGNAL(debugMessage(QString)),
 			this, SLOT(onDebugMessage(QString)));
 
+	connect(pHandler, SIGNAL(ignore(WWWSrequest*)),
+			this, SLOT(onIgnore(WWWSrequest*)));
+
 	connect(pHandler, SIGNAL(nextHandler(WWWSrequest*)),
 			this, SLOT(onNextHandler(WWWSrequest*)));
 
@@ -239,9 +182,43 @@ void ModuleHTTPSserver::onAppendHandler(MHTTPSShandlerBase *pHandler) {
 	connect(pHandler, SIGNAL(respond404(WWWSrequest*)),
 			this, SLOT(onRespond404(WWWSrequest*)));
 
-	this->apHandlers.append(pHandler);
+	connect(pHandler, SIGNAL(respondDirectoryList(WWWSrequest*,QString)),
+			this, SLOT(onRespondDirectoryList(WWWSrequest*,QString)));
+
+	connect(pHandler, SIGNAL(respondFile(WWWSrequest*,QString)),
+			this, SLOT(onRespondFile(WWWSrequest*,QString)));
+
+	connect(pHandler, SIGNAL(respondJSON(WWWSrequest*,QString)),
+			this, SLOT(onRespondJSON(WWWSrequest*,QString)));
+
+	QString sClass = pHandler->className();
+	this->onDebugMessage("OK:Initializing handler of class: " + sClass);
+	pHandler->init();
+
+	if (pHandler->isActive()) {
+
+		this->apHandlers.append(pHandler);
+
+		this->onDebugMessage(tr("OK:Initialized and added handler of class: ")
+							 + sClass);
+
+	} else {
+
+		this->onDebugMessage("KO:Due to init error, dropped handler of class: "
+							 + sClass);
+		disconnect(pHandler);
+		delete pHandler;
+
+	} // if still active or not
 
 } // onAppendHandler(MHTTPSShandlerBase)
+
+
+void ModuleHTTPSserver::onIgnore(WWWSrequest *pRequest) {
+
+	this->pWWWSserver->ignore(pRequest);
+
+} // onIgnore
 
 
 void ModuleHTTPSserver::onNextHandler(WWWSrequest *pRequest) {
@@ -250,6 +227,8 @@ void ModuleHTTPSserver::onNextHandler(WWWSrequest *pRequest) {
 
 	bool bPolledAll = true;
 
+	const QString sMethod = pRequest->method();
+	QString sMethodNot = "^" + sMethod;
 	MHTTPSShandlerBase *pHandler;
 	while (this->apHandlers.length() > pRequest->ubHandlerIndex) {
 
@@ -257,11 +236,17 @@ void ModuleHTTPSserver::onNextHandler(WWWSrequest *pRequest) {
 
 		pRequest->ubHandlerIndex++;
 
+		// skip if handler explicitly does not want this method
+		if (pHandler->methods().contains(sMethodNot)) continue;
+		// skip if request method is not in list of this handlers methods
+		if (!pHandler->methods().contains(sMethod)) continue;
+		// skip if this handler is a rewriter but rewrites have completed
 		if (pHandler->isRewriteHandlerClass() && pRequest->bRewritesDone) continue;
 
 		bPolledAll = false;
 
 		pHandler->handle(pRequest);
+		return;
 
 	} // loop until find one that is active
 
@@ -272,7 +257,8 @@ void ModuleHTTPSserver::onNextHandler(WWWSrequest *pRequest) {
 
 void ModuleHTTPSserver::onRequest(WWWSrequest *pRequest) {
 
-	this->onDebugMessage("onRequest " + QUrl(pRequest->request()).toString(QUrl::RemoveQuery));
+	this->onDebugMessage("onRequest " + pRequest->method() + " "
+						 + pRequest->targetQ().path());
 
 	if (!pRequest->socket()->isEncrypted()) {
 
@@ -337,6 +323,34 @@ void ModuleHTTPSserver::onRespond301(WWWSrequest *pRequest, const QString &sURL)
 } // onRespond301
 
 
+void ModuleHTTPSserver::onRespondDirectoryList(WWWSrequest *pRequest,
+											   const QString &sPath) {
+
+	this->onDebugMessage("onRespondDirectoryList");
+
+	this->pWWWSserver->respondDirectoryList(pRequest, sPath);
+
+} // onRespondDirectoryList
+
+
+void ModuleHTTPSserver::onRespondFile(WWWSrequest *pRequest, const QString &sPathFile) {
+
+	this->onDebugMessage("onRespondFile");
+
+	this->pWWWSserver->respondFile(pRequest, sPathFile);
+
+} // onRespondFile
+
+
+void ModuleHTTPSserver::onRespondJSON(WWWSrequest *pRequest, const QString &sJSON) {
+
+	this->onDebugMessage("onRespondJSON");
+
+	this->pWWWSserver->respondJSON(pRequest, sJSON);
+
+} // onRespondJSON
+
+
 void ModuleHTTPSserver::start() {
 
 	// ignore if not active
@@ -396,9 +410,6 @@ QHostAddress ModuleHTTPSserver::stringToHostAddress(const QString &sHostOrIP) {
 	return oHost;
 
 } // stringToHostAddress
-
-
-
 
 
 

@@ -28,6 +28,7 @@ public:
 	static const QString sModuleZeroConfig;
 
 	static const QString sTagActive;
+	static const QString sTagBasePaths;
 	static const QString sTagClass;
 	static const QString sTagListenIP;
 	static const QString sTagListenPort;
@@ -36,6 +37,11 @@ public:
 	static const QString sTagListIP;
 	static const QString sTagListIPisBlackNotWhite;
 	static const QString sTagMaxConnections;
+	static const QString sTagMHTTPSSHdirectoryIndex;
+	static const QString sTagMHTTPSSHfileExtension;
+	static const QString sTagMHTTPSSHfileSocketPath;
+	static const QString sTagMHTTPSSHfileSocketStarter;
+	static const QString sTagMHTTPSSHlistDirectories;
 	static const QString sTagPassword;
 	static const QString sTagPathCert;
 	static const QString sTagPathKey;
@@ -58,6 +64,7 @@ public:
 	explicit ModuleConf(const QString sPath, QObject *pParent = nullptr);
 	virtual ~ModuleConf();
 
+	virtual QStringList basePaths() const;
 	virtual bool isActive() const;
 	virtual bool isListBlack() const;
 	virtual QStringList listBW() const;
@@ -73,6 +80,7 @@ public:
 	virtual QString pathKey() const;
 
 	virtual void setActive(const bool bActive);
+	virtual void setBasePaths(const QStringList &asList);
 	virtual void setListBlackOrWhite(const bool bBlackNotWhite);
 	virtual void setListBW(const QStringList &asList);
 	virtual void setLocalIP(const QString &sHost);

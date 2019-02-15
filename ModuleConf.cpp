@@ -38,6 +38,7 @@ const QString ModuleConf::sTagMHTTPSSHfileExtension = QStringLiteral("sFileExten
 const QString ModuleConf::sTagMHTTPSSHfileSocketPath = QStringLiteral("sFileSocketPath");
 const QString ModuleConf::sTagMHTTPSSHfileSocketStarter = QStringLiteral("sFileSocketStarter");
 const QString ModuleConf::sTagMHTTPSSHlistDirectories = QStringLiteral("bListDirectories");
+const QString ModuleConf::sTagMHTTPSSHlistMethods = QStringLiteral("aMethods");
 const QString ModuleConf::sTagPassword = QStringLiteral("sPassword");
 const QString ModuleConf::sTagPathCert = QStringLiteral("sPathCert");
 const QString ModuleConf::sTagPathKey = QStringLiteral("sPathKey");

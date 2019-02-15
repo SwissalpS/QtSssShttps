@@ -29,7 +29,13 @@ protected:
 
 	void initMethods();
 
+protected slots:
+	inline virtual void doMatch(WWWSrequest *) {}
+
 public:
+	static const QString sCharNotMethod;
+	static const QString sCharAllMethod;
+
 	explicit MHTTPSShandlerBase(QJsonObject ojoHandlerConf,
 								QObject *pParent = nullptr);
 
@@ -53,8 +59,13 @@ public:
 												 : "" + sPathNew + "/"; }
 
 signals:
+	// not all handlers emit this, most deal with match in handle(...)
+	void isMatch(WWWSrequest *pRequest) const;
+	// ask to drop connection
 	void ignore(WWWSrequest *pRequest) const;
+	// ask to respond with prepared response
 	void respond(WWWSresponse *pResponse) const;
+	// and so on...
 	void respond(WWWSrequest *pRequest, const QString &sBody,
 				 const quint16 uiCode = 200) const;
 	void respond200(WWWSrequest *pRequest, const QString &sBody,
@@ -64,6 +75,7 @@ signals:
 	void respondDirectoryList(WWWSrequest *pRequest, const QString &sPath) const;
 	void respondFile(WWWSrequest *pRequest, const QString &sPathFile) const;
 	void respondJSON(WWWSrequest *pRequest, const QString &sJSON) const;
+	// not a match, invoke next handler
 	void nextHandler(WWWSrequest *pRequest) const;
 	void debugMessage(const QString &sMessage) const;
 

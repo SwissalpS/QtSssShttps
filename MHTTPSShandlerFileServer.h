@@ -33,7 +33,6 @@ public:
 	virtual void init() override;
 
 signals:
-	void debugMessage(const QString &sMessage) const;
 
 public slots:
 	virtual void handle(WWWSrequest *pRequest) override;

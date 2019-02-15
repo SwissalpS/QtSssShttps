@@ -6,6 +6,11 @@ namespace SwissalpS { namespace QtSssSapp {
 
 
 
+const QString MHTTPSShandlerBase::sCharNotMethod = QStringLiteral("^");
+const QString MHTTPSShandlerBase::sCharAllMethod = QStringLiteral("*");
+
+
+
 MHTTPSShandlerBase::MHTTPSShandlerBase(QJsonObject ojoHandlerConf, QObject *pParent) :
 	QObject(pParent),
 	pDelegate(nullptr),
@@ -61,6 +66,8 @@ void MHTTPSShandlerBase::handle(WWWSrequest *pRequest) {
 
 void MHTTPSShandlerBase::init() {
 
+	//this->onDebugMessage("init");
+
 	if (!this->bActive) return;
 
 	this->sPathBase = this->ojoConfig.value("sDirRoot").toString("");
@@ -72,9 +79,13 @@ void MHTTPSShandlerBase::init() {
 
 void MHTTPSShandlerBase::initMethods() {
 
+	//this->onDebugMessage("initMethods");
+
 	if (!this->bActive) return;
 
-	QJsonArray ojaMethods = this->ojoConfig.value("aMethods").toArray();
+	QJsonArray ojaMethods = this->ojoConfig.value(
+								ModuleConf::sTagMHTTPSSHlistMethods).toArray();
+
 	QStringList asAllMethods = MHTTPSShandlerBase::allGenerllyUsedHTTPmethods();
 
 	int iTotal = ojaMethods.count();
@@ -89,13 +100,13 @@ void MHTTPSShandlerBase::initMethods() {
 
 			sMethod = ojaMethods.at(i).toString().toUpper();
 			// check for *
-			if (0 == sMethod.compare("*")) {
+			if (0 == sMethod.compare(MHTTPSShandlerBase::sCharAllMethod)) {
 				bAllAdded = true;
 				continue;
 			} // if got *
 
 			// check for not-methods
-			if (sMethod.startsWith("^")) {
+			if (sMethod.startsWith(MHTTPSShandlerBase::sCharNotMethod)) {
 				if (asAllMethods.contains(sMethod.mid(1)))
 					asValidNotMethods.append(sMethod);
 				continue;
@@ -117,7 +128,7 @@ void MHTTPSShandlerBase::initMethods() {
 
 		sMethod = asValidMethods.at(i);
 		if (this->asMethods.contains(sMethod)) continue;
-		if (this->asMethods.contains("^" + sMethod)) continue;
+		if (this->asMethods.contains(MHTTPSShandlerBase::sCharNotMethod + sMethod)) continue;
 		this->asMethods.append(sMethod);
 
 	} // loop into definitive list

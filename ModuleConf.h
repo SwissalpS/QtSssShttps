@@ -42,6 +42,7 @@ public:
 	static const QString sTagMHTTPSSHfileSocketPath;
 	static const QString sTagMHTTPSSHfileSocketStarter;
 	static const QString sTagMHTTPSSHlistDirectories;
+	static const QString sTagMHTTPSSHlistMethods;
 	static const QString sTagPassword;
 	static const QString sTagPathCert;
 	static const QString sTagPathKey;

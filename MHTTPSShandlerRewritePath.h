@@ -32,7 +32,6 @@ public:
 	inline virtual bool isRewriteHandlerClass() const override { return true; }
 
 signals:
-	void debugMessage(const QString &sMessage) const;
 
 public slots:
 	virtual void handle(WWWSrequest *pRequest) override;

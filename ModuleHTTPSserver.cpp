@@ -238,10 +238,13 @@ void ModuleHTTPSserver::onNextHandler(WWWSrequest *pRequest) {
 
 		// skip if handler explicitly does not want this method
 		if (pHandler->methods().contains(sMethodNot)) continue;
+		//this->onDebugMessage("1 handler does not have a not-method");
 		// skip if request method is not in list of this handlers methods
 		if (!pHandler->methods().contains(sMethod)) continue;
+		//this->onDebugMessage("2 handler has method");
 		// skip if this handler is a rewriter but rewrites have completed
 		if (pHandler->isRewriteHandlerClass() && pRequest->bRewritesDone) continue;
+		//this->onDebugMessage("3 handler is not rewrite class or not done rewriting");
 
 		bPolledAll = false;
 

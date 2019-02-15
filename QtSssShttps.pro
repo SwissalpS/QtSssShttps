@@ -58,6 +58,8 @@ HEADERS += \
 	MHTTPSShandlerBase.h \
 	MHTTPSShandlerDelegateBase.h \
 	MHTTPSShandlerDrop.h \
+	MHTTPSShandlerFileExtensionBase.h \
+	MHTTPSShandlerFileExtensionPipe.h \
 	MHTTPSShandlerFileServer.h \
 	MHTTPSShandlerRedirect.h \
 	MHTTPSShandlerRewritePath.h \
@@ -83,6 +85,8 @@ SOURCES += main.cpp \
 	MHTTPSShandlerBase.cpp \
 	MHTTPSShandlerDelegateBase.cpp \
 	MHTTPSShandlerDrop.cpp \
+	MHTTPSShandlerFileExtensionBase.cpp \
+	MHTTPSShandlerFileExtensionPipe.cpp \
 	MHTTPSShandlerFileServer.cpp \
 	MHTTPSShandlerRedirect.cpp \
 	MHTTPSShandlerRewritePath.cpp \

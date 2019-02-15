@@ -8,6 +8,7 @@
 #include "MHTTPSShandlerDrop.h"
 #include "MHTTPSShandlerFileServer.h"
 #include "MHTTPSShandlerRewritePath.h"
+#include "MHTTPSShandlerFileExtensionPipe.h"
 
 
 
@@ -141,6 +142,20 @@ void ModuleHTTPSserver::onAppendHandler(QJsonObject ojoHandler) {
 											  ojoHandler, this);
 
 		pHandler = pHRew;
+
+	} else if (0 == sClass.compare("MHTTPSShandlerFileExtensionLocalSocket")) {
+
+		MHTTPSShandlerFileExtensionLocalSocket *pHFELS =
+				new MHTTPSShandlerFileExtensionLocalSocket(ojoHandler, this);
+
+		pHandler = pHFELS;
+
+	} else if (0 == sClass.compare("MHTTPSShandlerFileExtensionPipe")) {
+
+		MHTTPSShandlerFileExtensionPipe *pHFEP =
+				new MHTTPSShandlerFileExtensionPipe(ojoHandler, this);
+
+		pHandler = pHFEP;
 
 	} else {
 

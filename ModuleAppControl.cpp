@@ -3,6 +3,7 @@
 #include "AppController.h"
 
 #include <QFile>
+#include <QFileInfo>
 
 
 
@@ -177,6 +178,7 @@ void ModuleAppControl::initWWWserver() {
 	this->pWWWSserver->setListBW(this->asListBW);
 	this->pWWWSserver->setListIsBlack(this->pMC->isListBlack());
 	this->pWWWSserver->setMaxConnections(this->pMC->maxConnections());
+	this->pWWWSserver->setBasePaths(QStringList() << ":/www/");
 
 	QHostAddress oHost = ModuleBase::stringToHostAddress(this->pMC->localIP());
 
@@ -243,19 +245,46 @@ void ModuleAppControl::onWWWSrequest(WWWSrequest *pRequest) {
 
 	} // if unencrypted snuck in
 
-	bool b404 = false;
-	if (!pRequest->isGet()) b404 = true;
-	else if (0 != pRequest->path().compare("/")) b404 = true;
+	// only allow GET method on this socket
+	if (!pRequest->isGet()) {
 
-	if (b404) {
+		this->pWWWSserver->ignore(pRequest);
+		return;
+
+	} // if not GET-request
+
+	// rewrite path
+	QString sPath = pRequest->path();
+	if (!sPath.startsWith("/")) sPath = "/" + sPath;
+	if (0 == sPath.compare("/")) sPath = "/moduleAppControl.html";
+
+	sPath = ":/www" + sPath;
+
+	QFileInfo oFileInfo(sPath);
+	if (oFileInfo.isDir()) {
+
+		sPath += "/index.html";
+		oFileInfo = QFileInfo(sPath);
+
+	} // if dir
+
+	if (!oFileInfo.isReadable()) {
 
 		this->pWWWSserver->respond404(pRequest);
 
 		return;
 
-	} //
+	} // if not readable (not existant)
 
-	QFile oFile(":/www/moduleAppControl.html");
+	if (0 != sPath.compare(":/www/moduleAppControl.html")) {
+
+		this->pWWWSserver->respondFile(pRequest, sPath);
+
+		return;
+
+	} // if not main file
+
+	QFile oFile(sPath);
 	if (!oFile.open(QIODevice::ReadOnly)) {
 
 		this->pWWWSserver->respond404(pRequest);
